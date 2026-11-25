@@ -1,0 +1,26 @@
+# Android & Gradle build / IDE / local machine files
+.gradle/
+.idea/
+local.properties
+build/
+captures/
+.cxx/
+*.iml
+*.hprof
+*.keystore
+*.jks
+
+# Node / Web
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor & OS
+.vscode/
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~

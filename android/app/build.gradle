@@ -4,12 +4,13 @@ plugins {
 
 android {
     namespace "com.guqin.tuner"
-    compileSdk 34
+    compileSdk 37
+    buildToolsVersion "36.0.0"
 
     defaultConfig {
         applicationId "com.guqin.tuner"
         minSdk 24
-        targetSdk 34
+        targetSdk 35
         versionCode 1
         versionName "1.0.0"
     }

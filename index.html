@@ -16,7 +16,6 @@
   <div class="app-shell">
     <header class="topbar">
       <div class="brand">
-        <span class="brand-kicker">GUQIN TUNER</span>
         <h1 id="appTitle">古琴调音器</h1>
       </div>
       <div class="topbar-actions">
@@ -108,36 +107,34 @@
       </aside>
     </main>
 
-    <!-- 底部七叠没骨水墨山水（山即七弦，纯晕染无实线） -->
+    <!-- 底部三叠没骨水墨远山（远、中、近三层晕染，简洁留白） -->
     <div class="ink-wash-bg" aria-hidden="true">
-      <svg viewBox="0 0 960 180" preserveAspectRatio="xMidYMax slice" fill="none">
+      <svg class="ink-mountains" viewBox="0 0 960 180" preserveAspectRatio="none" fill="none">
         <defs>
           <linearGradient id="s1" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#29483d" stop-opacity="0.06"/>
+            <stop offset="0%" stop-color="#29483d" stop-opacity="0.075"/>
             <stop offset="100%" stop-color="#29483d" stop-opacity="0"/>
           </linearGradient>
           <linearGradient id="s2" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#29483d" stop-opacity="0.085"/>
+            <stop offset="0%" stop-color="#29483d" stop-opacity="0.105"/>
             <stop offset="100%" stop-color="#29483d" stop-opacity="0.01"/>
           </linearGradient>
           <linearGradient id="s3" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#29483d" stop-opacity="0.115"/>
+            <stop offset="0%" stop-color="#29483d" stop-opacity="0.135"/>
             <stop offset="100%" stop-color="#29483d" stop-opacity="0.02"/>
           </linearGradient>
         </defs>
-        <!-- 七叠纯水墨晕染（一弦至七弦，远淡近润，无实线勾边） -->
-        <path d="M0 78 Q 140 34, 290 62 T 560 46 T 820 68 T 960 56 L960 180 L0 180 Z" fill="url(#s1)"/>
-        <path d="M0 91 Q 180 54, 345 78 T 625 60 T 870 82 T 960 72 L960 180 L0 180 Z" fill="url(#s1)"/>
-        <path d="M0 104 Q 120 72, 275 94 T 535 76 T 780 96 T 960 88 L960 180 L0 180 Z" fill="url(#s2)"/>
-        <path d="M0 118 Q 210 86, 405 110 T 680 92 T 960 108 L960 180 L0 180 Z" fill="url(#s2)"/>
-        <path d="M0 131 Q 155 104, 335 124 T 605 108 T 855 126 T 960 120 L960 180 L0 180 Z" fill="url(#s2)"/>
-        <path d="M0 144 Q 240 120, 465 138 T 760 126 T 960 138 L960 180 L0 180 Z" fill="url(#s3)"/>
-        <path d="M0 158 Q 190 138, 395 154 T 710 146 T 960 154 L960 180 L0 180 Z" fill="url(#s3)"/>
-        <!-- 淡墨疏竹剪影 -->
-        <path d="M624 180 C 618 140, 621 98, 631 46" stroke="#29483d" stroke-width="1.6" stroke-linecap="round" opacity="0.14"/>
-        <path d="M625 86 C 603 78, 582 79, 566 87 C 586 90, 606 91, 625 86 Z" fill="#29483d" opacity="0.12"/>
-        <path d="M622 112 C 599 103, 577 101, 558 108 C 580 114, 602 117, 622 112 Z" fill="#29483d" opacity="0.13"/>
-        <path d="M629 66 C 646 55, 663 52, 677 56 C 662 63, 646 68, 629 66 Z" fill="#29483d" opacity="0.11"/>
+        <!-- 三叠水墨远山（远淡近润，无实线勾边） -->
+        <path d="M0 82 Q 160 36, 330 68 T 650 48 T 960 66 L960 180 L0 180 Z" fill="url(#s1)"/>
+        <path d="M0 116 Q 210 82, 420 108 T 740 88 T 960 106 L960 180 L0 180 Z" fill="url(#s2)"/>
+        <path d="M0 148 Q 220 124, 460 142 T 780 128 T 960 144 L960 180 L0 180 Z" fill="url(#s3)"/>
+      </svg>
+      <!-- 淡墨疏竹剪影（独立比例，宽屏不拉伸、不裁顶） -->
+      <svg class="ink-bamboo" viewBox="0 0 140 180" preserveAspectRatio="xMidYMax meet" fill="none">
+        <path d="M74 180 C 68 140, 71 98, 81 46" stroke="#29483d" stroke-width="1.6" stroke-linecap="round" opacity="0.14"/>
+        <path d="M75 86 C 53 78, 32 79, 16 87 C 36 90, 56 91, 75 86 Z" fill="#29483d" opacity="0.12"/>
+        <path d="M72 112 C 49 103, 27 101, 8 108 C 30 114, 52 117, 72 112 Z" fill="#29483d" opacity="0.13"/>
+        <path d="M79 66 C 96 55, 113 52, 127 56 C 112 63, 96 68, 79 66 Z" fill="#29483d" opacity="0.11"/>
       </svg>
     </div>
   </div>

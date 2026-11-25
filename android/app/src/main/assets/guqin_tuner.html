@@ -1,0 +1,843 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#29483d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="description" content="古琴实时麦克风调音器，支持电脑宽屏与手机竖屏、六种传统古琴调式、整体升降半音与低频防八度识别">
+  <title>古琴调音器</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='42' fill='%2329483d'/%3E%3Cpath d='M40 124 A 56 56 0 0 1 152 124' fill='none' stroke='%23f4f2ec' stroke-width='8' stroke-linecap='round'/%3E%3Cpolygon points='96,74 90,124 102,124' fill='%23a27c3e'/%3E%3Ccircle cx='96' cy='124' r='9' fill='%23f4f2ec'/%3E%3C/svg%3E">
+  <style>
+:root {
+  --bg: #f4f2ec;
+  --paper: #fffefa;
+  --ink: #26332e;
+  --muted: #77817b;
+  --line: #e4e0d5;
+  --green: #29483d;
+  --green-dark: #1d352c;
+  --green-soft: #e7efe9;
+  --tune-ok: #2e7d5b;
+  --tune-ok-soft: #e2f2ea;
+  --gold: #a27c3e;
+  --gold-soft: #faf3e4;
+  --flat: #4d708a;
+  --sharp: #b5563c;
+  --cinnabar: #c24b3a;
+  --shadow: 0 8px 24px rgba(38, 51, 46, 0.07);
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+[hidden] { display: none !important; }
+html, body {
+  margin: 0; padding: 0; height: 100%;
+  background: var(--bg); color: var(--ink);
+  font-family: system-ui, -apple-system, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+.app-shell {
+  position: relative;
+  width: min(460px, 100%); min-height: 100dvh;
+  margin: 0 auto;
+  padding: max(22px, env(safe-area-inset-top)) 16px max(52px, env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; gap: 14px; overflow-x: hidden;
+}
+.topbar, .banner, .workspace { position: relative; z-index: 1; }
+.ink-wash-bg { position: fixed; left: 50%; bottom: 0; transform: translateX(-50%); width: min(460px, 100%); height: 185px; pointer-events: none; z-index: 0; }
+.ink-wash-bg svg.ink-mountains { width: 100%; height: 100%; display: block; }
+.ink-wash-bg svg.ink-bamboo { position: absolute; right: 22%; bottom: 0; height: 100%; width: auto; display: block; }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-shrink: 0; margin-bottom: 12px; }
+.brand { display: flex; flex-direction: column; min-width: 0; }
+.brand h1 { margin: 0; font-size: 20px; line-height: 1.15; font-weight: 750; letter-spacing: 0.04em; }
+.topbar-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.pill-btn {
+  border: 1px solid var(--line); border-radius: 999px; padding: 7px 12px;
+  font-size: 13px; font-weight: 600; background: var(--paper);
+  display: inline-flex; align-items: center; gap: 6px; min-height: 36px;
+  transition: transform 0.12s ease, background-color 0.18s ease, border-color 0.18s ease;
+}
+.pill-btn:active { transform: scale(0.97); }
+.pill-btn.subtle { color: var(--ink); }
+.pill-btn.primary { background: var(--green); border-color: var(--green); color: #fff; padding: 7px 14px; }
+.pill-btn.primary.listening { background: var(--tune-ok); border-color: var(--tune-ok); }
+.mic-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255, 255, 255, 0.55); }
+.pill-btn.primary.listening .mic-dot {
+  background: #fff; box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); animation: pulseDot 1.6s infinite;
+}
+@keyframes pulseDot {
+  0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
+  70% { box-shadow: 0 0 0 7px rgba(255, 255, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+}
+.banner {
+  background: #fbf0ec; border: 1px solid #e9c9be; color: #8f3c27;
+  border-radius: 12px; padding: 8px 12px; font-size: 12px; line-height: 1.5; flex-shrink: 0;
+}
+.meter-card {
+  background: var(--paper); border: 1px solid var(--line); border-radius: 18px;
+  padding: 14px 14px 12px; box-shadow: var(--shadow);
+  display: flex; flex-direction: column; align-items: center; gap: 8px; flex-shrink: 0;
+}
+.readout {
+  width: 100%; display: flex; flex-direction: row; align-items: center; justify-content: center;
+  gap: 12px; padding-top: 4px; border-top: 1px dashed rgba(228, 224, 213, 0.85);
+}
+.note-display { display: flex; align-items: flex-start; line-height: 1; color: var(--green); transition: color 0.18s ease; }
+.note-display.in-tune { color: var(--tune-ok); }
+.note-display.is-held { opacity: 0.62; }
+.note-letter { font-size: clamp(36px, 10vw, 46px); font-weight: 750; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.note-meta { display: flex; flex-direction: column; justify-content: space-between; margin-left: 2px; height: clamp(34px, 9vw, 44px); }
+.note-acc { font-size: 16px; font-weight: 700; line-height: 1; }
+.note-oct { font-size: 16px; font-weight: 700; line-height: 1; color: var(--muted); }
+.freq-value { font-size: 15px; font-weight: 650; color: var(--ink); font-variant-numeric: tabular-nums; }
+.cents-pill {
+  font-size: 11px; font-weight: 600; color: var(--muted); background: #f1efe7;
+  border-radius: 999px; padding: 3px 9px; max-width: 100%;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cents-pill.in-tune { color: var(--tune-ok); background: var(--tune-ok-soft); }
+.cents-pill.flat { color: var(--flat); background: #eaf1f6; }
+.cents-pill.sharp { color: var(--sharp); background: #f9ece8; }
+.gauge-wrap { width: 100%; display: flex; align-items: center; justify-content: center; }
+.gauge-svg { width: 100%; max-width: 224px; height: auto; overflow: visible; }
+.gauge-track { fill: none; stroke: #d7ddd9; stroke-width: 5.5; stroke-linecap: round; }
+.gauge-ok-arc { fill: none; stroke: var(--tune-ok); stroke-width: 6; stroke-linecap: round; opacity: 0.78; }
+.gauge-tick { stroke: #a4afa9; stroke-width: 1.5; stroke-linecap: round; }
+.gauge-tick.major { stroke: var(--green); stroke-width: 2; }
+.gauge-label { font-size: 10px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+.gauge-label.zero { fill: var(--tune-ok); font-weight: 700; }
+.needle-body, .needle-pivot { fill: var(--green); transition: fill 0.16s ease; }
+.needle-group.in-tune .needle-body, .needle-group.in-tune .needle-pivot { fill: var(--tune-ok); }
+.needle-group.sharp .needle-body, .needle-group.sharp .needle-pivot { fill: var(--sharp); }
+.needle-group.flat .needle-body, .needle-group.flat .needle-pivot { fill: var(--flat); }
+.workspace { margin: 0; display: grid; grid-template-columns: 1fr 90px; gap: 15px; align-items: stretch; }
+.left-pane { display: flex; flex-direction: column; justify-content: space-between; gap: 16px; min-width: 0; }
+.bottom-controls { display: contents; }
+.a4-bar {
+  background: var(--paper); border: 1px solid var(--line); border-radius: 16px;
+  padding: 9px 12px; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow);
+}
+.round-ctrl {
+  width: 34px; height: 34px; border-radius: 50%; border: 0; background: var(--green); color: #fff;
+  font-size: 20px; line-height: 1; display: inline-flex; align-items: center; justify-content: center;
+  transition: transform 0.1s ease, opacity 0.15s ease;
+}
+.round-ctrl:active { transform: scale(0.93); }
+.round-ctrl:disabled { opacity: 0.35; cursor: not-allowed; }
+.a4-readout {
+  border: 0; background: transparent; font-size: 20px; font-weight: 700;
+  color: var(--ink); font-variant-numeric: tabular-nums; padding: 2px 8px; border-radius: 8px;
+}
+.a4-readout:active { background: var(--green-soft); }
+.bamboo-stage { display: none; }
+.bamboo-svg { width: 92%; max-height: 155px; color: var(--green); }
+.transpose-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.transpose-btn {
+  border: 1px solid #cad6ce; border-radius: 999px; background: var(--green-soft); color: var(--green);
+  padding: 10px 8px; font-size: 14px; font-weight: 700;
+  box-shadow: 0 4px 12px rgba(41, 72, 61, 0.08); transition: transform 0.1s ease, background-color 0.15s ease;
+}
+.transpose-btn:active { transform: scale(0.97); background: #dce8e0; }
+.transpose-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.tuning-card {
+  background: var(--paper); border: 1px solid var(--line); border-radius: 16px;
+  padding: 12px 12px 14px; box-shadow: var(--shadow); position: relative;
+  overflow: hidden; cursor: pointer; transition: border-color 0.15s ease;
+}
+.tuning-card:active { border-color: var(--gold); }
+.tuning-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.tuning-title-wrap { display: flex; flex-direction: column; gap: 2px; }
+.tuning-title { font-size: 15px; font-weight: 750; color: var(--ink); }
+.tuning-hint { font-size: 11px; color: var(--muted); }
+.transpose-badge {
+  position: absolute; top: 0; right: 0; border: 0; background: var(--gold); color: #fff;
+  font-size: 14px; font-weight: 750; padding: 5px 14px 6px 16px;
+  border-bottom-left-radius: 14px; font-variant-numeric: tabular-nums;
+}
+.jianpu-row { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; align-items: start; gap: 2px; }
+.jianpu-cell { display: flex; flex-direction: column; align-items: center; color: var(--green); transition: color 0.15s ease, transform 0.15s ease; }
+.jianpu-cell.active { color: var(--gold); transform: translateY(-1px); }
+.jianpu-cell.in-tune { color: var(--tune-ok); }
+.jianpu-digit { font-size: 19px; font-weight: 750; line-height: 1.1; }
+.jianpu-dots { display: flex; flex-direction: column; gap: 2px; margin-top: 2px; min-height: 10px; }
+.jianpu-dot { width: 3.5px; height: 3.5px; border-radius: 50%; background: currentColor; }
+.strings-pane { display: flex; flex-direction: column; justify-content: space-between; }
+.strings-column { height: 100%; display: flex; flex-direction: column; justify-content: space-between; gap: 22px; padding: 2px 0; }
+.string-row { display: flex; align-items: center; justify-content: flex-end; gap: 11px; position: relative; }
+.string-peg {
+  width: 52px; height: 52px; border-radius: 50%; background: var(--paper);
+  border: 1.5px solid #cfd6cf; box-shadow: inset 0 0 0 2px #f4f2ec, 0 2px 8px rgba(38, 51, 46, 0.06);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  transition: transform 0.16s ease, border-color 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
+}
+.string-note { font-size: 15.5px; font-weight: 750; line-height: 1.05; color: var(--green); }
+.string-num { font-size: 10px; color: var(--muted); line-height: 1.1; }
+.string-hz { display: none; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.string-row.active .string-peg { border-color: var(--gold); background: var(--gold-soft); transform: scale(1.07); box-shadow: inset 0 0 0 2px #fff, 0 0 0 4px rgba(162, 124, 62, 0.18); }
+.string-row.active .string-note { color: #7d5b22; }
+.string-row.in-tune .string-peg { border-color: var(--tune-ok); background: var(--tune-ok-soft); transform: scale(1.09); box-shadow: inset 0 0 0 2px #fff, 0 0 0 4px rgba(46, 125, 91, 0.22); }
+.string-row.in-tune .string-note { color: var(--tune-ok); }
+.string-dots-track { width: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
+.track-dot { width: 6.5px; height: 6.5px; border-radius: 50%; background: #d2dad5; transition: transform 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease; }
+.track-dot.dot-ok { width: 9px; height: 9px; background: #b5c3bc; }
+.track-dot.dot-low.lit { background: var(--flat); transform: scale(1.2); box-shadow: 0 0 0 3px rgba(77, 112, 138, 0.22); }
+.track-dot.dot-ok.lit { background: var(--tune-ok); transform: scale(1.18); box-shadow: 0 0 0 3px rgba(46, 125, 91, 0.24); }
+.track-dot.dot-high.lit { background: var(--cinnabar); transform: scale(1.2); box-shadow: 0 0 0 3px rgba(194, 75, 58, 0.22); }
+.drawer-backdrop { position: fixed; inset: 0; background: rgba(25, 36, 32, 0.42); z-index: 20; }
+.drawer {
+  position: fixed; left: 50%; bottom: 0; transform: translateX(-50%);
+  width: min(460px, 100%); max-height: 78dvh; background: var(--paper);
+  border-top-left-radius: 22px; border-top-right-radius: 22px;
+  padding: 16px 16px max(18px, env(safe-area-inset-bottom));
+  box-shadow: 0 -12px 32px rgba(25, 36, 32, 0.16);
+  z-index: 30; display: flex; flex-direction: column; gap: 12px;
+}
+.drawer-header { display: flex; align-items: center; justify-content: space-between; }
+.drawer-header h2 { margin: 0; font-size: 16px; font-weight: 750; }
+.drawer-close { border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 5px 12px; font-size: 12px; font-weight: 600; }
+.tuning-list { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
+.tuning-option { border: 1px solid var(--line); border-radius: 14px; background: #fff; padding: 11px 13px; text-align: left; display: flex; flex-direction: column; gap: 4px; }
+.tuning-option.selected { border-color: var(--green); background: var(--green-soft); }
+.tuning-option-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.tuning-option-name { font-size: 15px; font-weight: 750; color: var(--ink); }
+.tuning-option-key { font-size: 12px; font-weight: 700; color: var(--green); background: rgba(41, 72, 61, 0.1); border-radius: 999px; padding: 2px 8px; }
+.tuning-option-meta { font-size: 12px; color: var(--muted); }
+.tuning-option-notes { font-size: 12px; font-weight: 600; color: var(--gold); letter-spacing: 0.04em; }
+@media (max-height: 700px) and (max-width: 819px) {
+  .app-shell { gap: 8px; }
+  .strings-column { gap: 10px; }
+  .string-peg { width: 46px; height: 46px; }
+  .string-note { font-size: 14px; }
+}
+@media (min-width: 820px) {
+  body { display: flex; align-items: flex-start; justify-content: center; }
+  .app-shell { width: min(900px, 94vw); min-height: auto; max-height: none; padding: 30px 32px 44px; gap: 18px; overflow: visible; }
+  .brand h1 { font-size: 26px; }
+  .pill-btn { padding: 9px 16px; font-size: 14px; min-height: 40px; }
+  .pill-btn:hover { border-color: var(--green); }
+  .pill-btn.primary:hover { background: var(--green-dark); }
+  .meter-card { padding: 20px 24px 18px; gap: 12px; border-radius: 22px; }
+  .readout { align-items: center; gap: 20px; padding-top: 10px; }
+  .note-letter { font-size: 56px; }
+  .note-meta { height: 52px; margin-left: 4px; }
+  .note-acc, .note-oct { font-size: 20px; }
+  .freq-value { font-size: 22px; }
+  .cents-pill { font-size: 13px; padding: 5px 13px; }
+  .gauge-svg { max-width: 340px; }
+  .workspace { margin: 0; grid-template-columns: 1.15fr 0.85fr; gap: 20px; align-items: stretch; }
+  .ink-wash-bg { display: block; width: 100%; height: 200px; opacity: 0.9; }
+  .left-pane { gap: 14px; }
+  .a4-bar { padding: 12px 18px; }
+  .a4-readout { font-size: 22px; }
+  .bamboo-stage { display: none; }
+  .transpose-btn { padding: 12px 14px; font-size: 15px; }
+  .transpose-btn:hover:not(:disabled) { background: #dce8e0; }
+  .tuning-card { padding: 16px 18px 18px; }
+  .tuning-card:hover { border-color: var(--gold); }
+  .tuning-title { font-size: 17px; }
+  .jianpu-digit { font-size: 22px; }
+  .strings-pane { background: var(--paper); border: 1px solid var(--line); border-radius: 22px; padding: 18px 20px; box-shadow: var(--shadow); }
+  .strings-column { height: 100%; justify-content: space-between; gap: 10px; }
+  .string-row { justify-content: space-between; padding: 8px 12px; border-radius: 14px; background: #faf9f4; border: 1px solid rgba(228, 224, 213, 0.7); transition: background-color 0.16s ease, border-color 0.16s ease; }
+  .string-row.active { background: var(--gold-soft); border-color: var(--gold); }
+  .string-row.in-tune { background: var(--tune-ok-soft); border-color: var(--tune-ok); }
+  .string-peg { width: auto; height: 44px; border-radius: 999px; padding: 0 18px; flex-direction: row; gap: 10px; box-shadow: none; }
+  .string-note { font-size: 17px; min-width: 28px; }
+  .string-num { font-size: 13px; }
+  .string-hz { display: inline-block; font-size: 14px; font-weight: 600; margin-left: auto; margin-right: 14px; }
+  .string-dots-track { width: 16px; gap: 4px; }
+  .drawer { bottom: auto; top: 50%; transform: translate(-50%, -50%); width: min(520px, 92vw); border-radius: 22px; padding: 20px 22px 22px; }
+  .tuning-option:hover { border-color: var(--gold); }
+}
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <h1 id="appTitle">古琴调音器</h1>
+      </div>
+      <div class="topbar-actions">
+        <button id="installBtn" class="pill-btn subtle" type="button" hidden>安装到桌面</button>
+        <button id="langBtn" class="pill-btn subtle" type="button" aria-label="切换为繁体中文">繁</button>
+        <button id="micBtn" class="pill-btn primary" type="button" aria-pressed="false">
+          <span class="mic-dot" aria-hidden="true"></span>
+          <span id="micBtnText">开始调音</span>
+        </button>
+      </div>
+    </header>
+
+    <div id="banner" class="banner" role="alert" hidden></div>
+
+    <main class="workspace">
+      <div class="left-pane">
+        <section class="meter-card" aria-live="polite">
+          <div class="gauge-wrap">
+            <svg class="gauge-svg" viewBox="0 0 240 142" role="img" aria-label="音分偏差指针表盘">
+              <path class="gauge-track" d="M 24 126 A 96 96 0 0 1 216 126" />
+              <path class="gauge-ok-arc" d="M 105.0 31.2 A 96 96 0 0 1 135.0 31.2" />
+              <g id="gaugeTicks"></g>
+              <text class="gauge-label" x="24" y="139" text-anchor="middle">-50</text>
+              <text class="gauge-label" x="97" y="62" text-anchor="middle">-10</text>
+              <text class="gauge-label zero" x="120" y="56" text-anchor="middle">0</text>
+              <text class="gauge-label" x="143" y="62" text-anchor="middle">+10</text>
+              <text class="gauge-label" x="216" y="139" text-anchor="middle">+50</text>
+              <g id="needleGroup" class="needle-group" transform="rotate(0 120 126)">
+                <polygon class="needle-body" points="120,38 115.5,122 124.5,122" />
+                <circle class="needle-pivot" cx="120" cy="126" r="7" />
+              </g>
+            </svg>
+          </div>
+
+          <div class="readout">
+            <div class="note-display" id="noteDisplay">
+              <span class="note-letter" id="noteLetter">--</span>
+              <span class="note-meta">
+                <span class="note-acc" id="noteAccidental"></span>
+                <span class="note-oct" id="noteOctave"></span>
+              </span>
+            </div>
+            <div class="freq-value" id="freqDisplay">--.- Hz</div>
+          </div>
+        </section>
+
+        <div class="a4-bar">
+          <button id="a4Dec" class="round-ctrl" type="button" aria-label="降低 A4 基准">−</button>
+          <button id="a4Value" class="a4-readout" type="button" title="点击重置为 440 Hz">440 Hz</button>
+          <button id="a4Inc" class="round-ctrl" type="button" aria-label="升高 A4 基准">+</button>
+        </div>
+
+        <div class="bamboo-stage" aria-hidden="true">
+          <svg class="bamboo-svg" viewBox="0 0 220 160" fill="none">
+            <path d="M22 156 C 46 112, 62 72, 74 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" opacity="0.22"/>
+            <path d="M74 66 C 98 58, 128 56, 152 64 C 126 70, 98 73, 74 66 Z" fill="currentColor" opacity="0.14"/>
+            <path d="M62 96 C 92 84, 128 78, 166 86 C 134 97, 94 103, 62 96 Z" fill="currentColor" opacity="0.16"/>
+            <path d="M52 124 C 84 114, 118 115, 146 126 C 114 132, 82 132, 52 124 Z" fill="currentColor" opacity="0.12"/>
+            <path d="M46 72 C 28 56, 16 42, 8 26 C 26 38, 40 52, 46 72 Z" fill="currentColor" opacity="0.13"/>
+            <path d="M126 38 C 148 26, 174 22, 198 28 C 174 37, 150 42, 126 38 Z" fill="currentColor" opacity="0.11"/>
+          </svg>
+        </div>
+
+        <div class="bottom-controls">
+          <div class="transpose-row">
+            <button id="transposeDown" class="transpose-btn" type="button">降半音</button>
+            <button id="transposeUp" class="transpose-btn" type="button">升半音</button>
+          </div>
+
+          <div class="tuning-card" id="tuningCard" role="button" tabindex="0" aria-haspopup="dialog">
+            <div class="tuning-card-head">
+              <div class="tuning-title-wrap">
+                <span id="tuningTitle" class="tuning-title">正调定弦 1=F</span>
+                <span id="switchTuningHint" class="tuning-hint">点击切换调式 ▾</span>
+              </div>
+              <button id="transposeBadge" class="transpose-badge" type="button" hidden title="点击移调归零">-1</button>
+            </div>
+            <div id="jianpuRow" class="jianpu-row" aria-label="七弦散音简谱"></div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="strings-pane" aria-label="古琴七弦指示">
+        <div id="stringsColumn" class="strings-column"></div>
+      </aside>
+    </main>
+
+    <div class="ink-wash-bg" aria-hidden="true">
+      <svg class="ink-mountains" viewBox="0 0 960 180" preserveAspectRatio="none" fill="none">
+        <defs>
+          <linearGradient id="s1" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#29483d" stop-opacity="0.075"/>
+            <stop offset="100%" stop-color="#29483d" stop-opacity="0"/>
+          </linearGradient>
+          <linearGradient id="s2" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#29483d" stop-opacity="0.105"/>
+            <stop offset="100%" stop-color="#29483d" stop-opacity="0.01"/>
+          </linearGradient>
+          <linearGradient id="s3" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#29483d" stop-opacity="0.135"/>
+            <stop offset="100%" stop-color="#29483d" stop-opacity="0.02"/>
+          </linearGradient>
+        </defs>
+        <path d="M0 82 Q 160 36, 330 68 T 650 48 T 960 66 L960 180 L0 180 Z" fill="url(#s1)"/>
+        <path d="M0 116 Q 210 82, 420 108 T 740 88 T 960 106 L960 180 L0 180 Z" fill="url(#s2)"/>
+        <path d="M0 148 Q 220 124, 460 142 T 780 128 T 960 144 L960 180 L0 180 Z" fill="url(#s3)"/>
+      </svg>
+      <svg class="ink-bamboo" viewBox="0 0 140 180" preserveAspectRatio="xMidYMax meet" fill="none">
+        <path d="M74 180 C 68 140, 71 98, 81 46" stroke="#29483d" stroke-width="1.6" stroke-linecap="round" opacity="0.14"/>
+        <path d="M75 86 C 53 78, 32 79, 16 87 C 36 90, 56 91, 75 86 Z" fill="#29483d" opacity="0.12"/>
+        <path d="M72 112 C 49 103, 27 101, 8 108 C 30 114, 52 117, 72 112 Z" fill="#29483d" opacity="0.13"/>
+        <path d="M79 66 C 96 55, 113 52, 127 56 C 112 63, 96 68, 79 66 Z" fill="#29483d" opacity="0.11"/>
+      </svg>
+    </div>
+  </div>
+
+  <div id="drawerBackdrop" class="drawer-backdrop" hidden></div>
+  <section id="tuningDrawer" class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" hidden>
+    <div class="drawer-header">
+      <h2 id="drawerTitle">选择古琴调式</h2>
+      <button id="drawerClose" class="drawer-close" type="button">关闭</button>
+    </div>
+    <div id="tuningList" class="tuning-list"></div>
+  </section>
+
+  <script>
+  (() => {
+    const DEFAULT_TUNING_ID = "zhengdiao";
+    const A4_MIN = 430, A4_MAX = 450, A4_DEFAULT = 440;
+    const TRANSPOSE_MIN = -6, TRANSPOSE_MAX = 6;
+    const IN_TUNE_CENTS = 5, STRING_MATCH_SEMITONES = 1.5;
+    const SUPPORTED_LANGUAGES = ["zh-CN", "zh-TW"];
+    const STRING_NUMERALS = ["一", "二", "三", "四", "五", "六", "七"];
+    const SETTINGS_KEY = "guqin-tuner-settings-v1";
+    const FFT_SIZE = 4096;
+
+    const TUNINGS = [
+      { id: "zhengdiao", keyLabel: "1=F", preferFlat: true, baseMidis: [36, 38, 41, 43, 45, 48, 50],
+        jianpu: [{digit:"5",dots:-2},{digit:"6",dots:-2},{digit:"1",dots:-1},{digit:"2",dots:-1},{digit:"3",dots:-1},{digit:"5",dots:-1},{digit:"6",dots:-1}] },
+      { id: "ruibin", keyLabel: "1=B♭", preferFlat: true, baseMidis: [36, 38, 41, 43, 46, 48, 50],
+        jianpu: [{digit:"2",dots:-2},{digit:"3",dots:-2},{digit:"5",dots:-2},{digit:"6",dots:-2},{digit:"1",dots:-1},{digit:"2",dots:-1},{digit:"3",dots:-1}] },
+      { id: "manjiao", keyLabel: "1=C", preferFlat: false, baseMidis: [36, 38, 40, 43, 45, 48, 50],
+        jianpu: [{digit:"1",dots:-1},{digit:"2",dots:-1},{digit:"3",dots:-1},{digit:"5",dots:-1},{digit:"6",dots:-1},{digit:"1",dots:0},{digit:"2",dots:0}] },
+      { id: "qingshang", keyLabel: "1=E♭", preferFlat: true, baseMidis: [36, 39, 41, 43, 46, 48, 51],
+        jianpu: [{digit:"6",dots:-2},{digit:"1",dots:-1},{digit:"2",dots:-1},{digit:"3",dots:-1},{digit:"5",dots:-1},{digit:"6",dots:-1},{digit:"1",dots:0}] },
+      { id: "manshang", keyLabel: "1=F", preferFlat: true, baseMidis: [36, 36, 41, 43, 45, 48, 50],
+        jianpu: [{digit:"5",dots:-2},{digit:"5",dots:-2},{digit:"1",dots:-1},{digit:"2",dots:-1},{digit:"3",dots:-1},{digit:"5",dots:-1},{digit:"6",dots:-1}] },
+      { id: "wuyi", keyLabel: "1=B♭", preferFlat: true, baseMidis: [34, 38, 41, 43, 46, 48, 50],
+        jianpu: [{digit:"1",dots:-2},{digit:"3",dots:-2},{digit:"5",dots:-2},{digit:"6",dots:-2},{digit:"1",dots:-1},{digit:"2",dots:-1},{digit:"3",dots:-1}] }
+    ];
+
+    const FLAT_NOTES = [["C",""],["D","♭"],["D",""],["E","♭"],["E",""],["F",""],["G","♭"],["G",""],["A","♭"],["A",""],["B","♭"],["B",""]];
+    const SHARP_NOTES = [["C",""],["C","♯"],["D",""],["D","♯"],["E",""],["F",""],["F","♯"],["G",""],["G","♯"],["A",""],["A","♯"],["B",""]];
+
+    const DICT = {
+      "zh-CN": {
+        title: "古琴调音器", langToggle: "繁", langAria: "切换为繁体中文",
+        startMic: "开始调音", stopMic: "暂停调音", listening: "拾音中 · 请拨弦",
+        standby: "待机 · 点右上角开始", pausedBackground: "已自动暂停（切回前台可继续）",
+        inTune: "准音", flat: "偏低 · 宜紧弦", sharp: "偏高 · 宜松弦", centsUnit: "音分",
+        lowerSemitone: "降半音", raiseSemitone: "升半音", resetA4Title: "点击重置为 440 Hz",
+        resetTransposeTitle: "点击移调归零", tuningSuffix: "定弦", switchTuningHint: "点击切换调式",
+        drawerTitle: "选择古琴调式", drawerClose: "关闭", installApp: "安装到桌面",
+        errInsecure: "浏览器要求在 HTTPS 或 localhost 环境下才能使用麦克风。",
+        errLocalFile: "当前为手机本地文件模式（file/content），浏览器禁止弹出麦克风授权。请将页面放到 HTTPS 网址（如 GitHub Pages）打开即可正常申请权限。",
+        errUnsupported: "当前浏览器不支持麦克风拾音，请改用 Safari 或 Chrome 打开。",
+        errPermission: "未获得麦克风权限，请在浏览器地址栏或系统设置中允许后重试。",
+        errNotFound: "未检测到可用的麦克风设备。", errUnknown: "无法启动麦克风，请检查设备权限后重试。",
+        tunings: {
+          zhengdiao: { name: "正调", alter: "标准定弦", pieces: "流水 · 平沙落雁 · 梅花三弄" },
+          ruibin: { name: "蕤宾调", alter: "紧五弦", pieces: "潇湘水云 · 阳关三叠" },
+          manjiao: { name: "慢角调", alter: "慢三弦", pieces: "风雷引 · 凤求凰" },
+          qingshang: { name: "清商调", alter: "紧二五七弦", pieces: "捣衣 · 秋风词" },
+          manshang: { name: "慢商调", alter: "慢二弦", pieces: "广陵散" },
+          wuyi: { name: "无射调", alter: "紧五慢一弦", pieces: "胡笳十八拍 · 大胡笳" }
+        }
+      },
+      "zh-TW": {
+        title: "古琴調音器", langToggle: "简", langAria: "切換為簡體中文",
+        startMic: "開始調音", stopMic: "暫停調音", listening: "拾音中 · 請撥弦",
+        standby: "待機 · 點右上角開始", pausedBackground: "已自動暫停（切回前景可繼續）",
+        inTune: "準音", flat: "偏低 · 宜緊弦", sharp: "偏高 · 宜鬆弦", centsUnit: "音分",
+        lowerSemitone: "降半音", raiseSemitone: "升半音", resetA4Title: "點擊重設為 440 Hz",
+        resetTransposeTitle: "點擊移調歸零", tuningSuffix: "定弦", switchTuningHint: "點擊切換調式",
+        drawerTitle: "選擇古琴調式", drawerClose: "關閉", installApp: "安裝到桌面",
+        errInsecure: "瀏覽器要求在 HTTPS 或 localhost 環境下才能使用麥克風。",
+        errLocalFile: "目前為手機本地檔案模式（file/content），瀏覽器禁止彈出麥克風授權。請將頁面放到 HTTPS 網址（如 GitHub Pages）開啟即可正常申請權限。",
+        errUnsupported: "目前瀏覽器不支援麥克風拾音，請改用 Safari 或 Chrome 開啟。",
+        errPermission: "未取得麥克風權限，請在瀏覽器網址列或系統設定中允許後重試。",
+        errNotFound: "未偵測到可用的麥克風裝置。", errUnknown: "無法啟動麥克風，請檢查裝置權限後重試。",
+        tunings: {
+          zhengdiao: { name: "正調", alter: "標準定弦", pieces: "流水 · 平沙落雁 · 梅花三弄" },
+          ruibin: { name: "蕤賓調", alter: "緊五弦", pieces: "瀟湘水雲 · 陽關三疊" },
+          manjiao: { name: "慢角調", alter: "慢三弦", pieces: "風雷引 · 鳳求凰" },
+          qingshang: { name: "清商調", alter: "緊二五七弦", pieces: "擣衣 · 秋風詞" },
+          manshang: { name: "慢商調", alter: "慢二弦", pieces: "廣陵散" },
+          wuyi: { name: "無射調", alter: "緊五慢一弦", pieces: "胡笳十八拍 · 大胡笳" }
+        }
+      }
+    };
+
+    const $ = (id) => document.getElementById(id);
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+    const getDict = (lang) => DICT[lang] || DICT["zh-CN"];
+    const getTuningById = (id) => TUNINGS.find((t) => t.id === id) || TUNINGS[0];
+    const midiToFreq = (midi, a4 = A4_DEFAULT) => a4 * Math.pow(2, (midi - 69) / 12);
+    const freqToMidi = (freq, a4 = A4_DEFAULT) => 69 + 12 * Math.log2(freq / a4);
+
+    function formatMidiNote(midi, preferFlat = true) {
+      const rounded = Math.round(midi);
+      const pc = ((rounded % 12) + 12) % 12;
+      const octave = Math.floor(rounded / 12) - 1;
+      const [letter, accidental] = (preferFlat ? FLAT_NOTES : SHARP_NOTES)[pc];
+      return { letter, accidental, octave, shortName: `${letter}${accidental}`, fullName: `${letter}${accidental}${octave}` };
+    }
+
+    function getEffectiveStrings(tuningId, transpose = 0, a4 = A4_DEFAULT) {
+      const tuning = getTuningById(tuningId);
+      const shift = clamp(Math.round(transpose), TRANSPOSE_MIN, TRANSPOSE_MAX);
+      const refA4 = clamp(a4, A4_MIN, A4_MAX);
+      return tuning.baseMidis.map((baseMidi, index) => {
+        const midi = baseMidi + shift;
+        const nextMidi = index < 6 ? tuning.baseMidis[index + 1] + shift : null;
+        return {
+          index, stringNumber: index + 1, midi, freq: midiToFreq(midi, refA4),
+          note: formatMidiNote(midi, tuning.preferFlat), jianpu: tuning.jianpu[index],
+          gapToNext: nextMidi === null ? 0 : Math.max(0, nextMidi - midi)
+        };
+      });
+    }
+
+    function analyzePitch(freq, { tuningId = DEFAULT_TUNING_ID, transpose = 0, a4 = A4_DEFAULT } = {}) {
+      if (!Number.isFinite(freq) || freq <= 0) return null;
+      const tuning = getTuningById(tuningId);
+      const refA4 = clamp(a4, A4_MIN, A4_MAX);
+      const midi = freqToMidi(freq, refA4);
+      const nearestMidi = Math.round(midi);
+      const cents = (midi - nearestMidi) * 100;
+      const note = formatMidiNote(nearestMidi, tuning.preferFlat);
+      const strings = getEffectiveStrings(tuning.id, transpose, refA4);
+      let minDiff = Infinity;
+      for (const s of strings) { const d = Math.abs(midi - s.midi); if (d < minDiff) minDiff = d; }
+      const matchedStrings = minDiff <= STRING_MATCH_SEMITONES
+        ? strings.filter((s) => Math.abs(Math.abs(midi - s.midi) - minDiff) < 1e-6).map((s) => s.index)
+        : [];
+      return { freq, midi, nearestMidi, cents, note, inTune: Math.abs(cents) <= IN_TUNE_CENTS, matchedStrings };
+    }
+
+    function detectPitchMPM(buffer, sampleRate) {
+      const minFreq = 45, maxFreq = 1200, rmsThreshold = 0.008, clarityThreshold = 0.55, peakRatio = 0.88;
+      const size = buffer.length;
+      if (size < 512 || !sampleRate) return null;
+      let mean = 0;
+      for (let i = 0; i < size; i++) mean += buffer[i];
+      mean /= size;
+      let sumSq = 0;
+      const x = new Float32Array(size);
+      for (let i = 0; i < size; i++) { const v = buffer[i] - mean; x[i] = v; sumSq += v * v; }
+      const rms = Math.sqrt(sumSq / size);
+      if (rms < rmsThreshold) return null;
+      const minLag = Math.max(2, Math.floor(sampleRate / maxFreq));
+      const maxLag = Math.min(Math.floor(size / 2), Math.ceil(sampleRate / minFreq));
+      if (maxLag <= minLag) return null;
+      const prefixSq = new Float64Array(size + 1);
+      for (let i = 0; i < size; i++) prefixSq[i + 1] = prefixSq[i] + x[i] * x[i];
+      const nsdf = new Float32Array(maxLag + 1);
+      for (let tau = minLag; tau <= maxLag; tau++) {
+        const limit = size - tau;
+        let acf = 0;
+        for (let j = 0; j < limit; j++) acf += x[j] * x[j + tau];
+        const m = prefixSq[limit] + (prefixSq[size] - prefixSq[tau]);
+        nsdf[tau] = m > 1e-12 ? (2 * acf) / m : 0;
+      }
+      let startTau = minLag;
+      while (startTau <= maxLag && nsdf[startTau] > 0) startTau++;
+      const peaks = [];
+      let inPositive = false, peakIdx = -1, peakVal = -Infinity;
+      for (let tau = startTau; tau <= maxLag; tau++) {
+        const v = nsdf[tau];
+        if (v > 0) {
+          if (!inPositive) { inPositive = true; peakIdx = tau; peakVal = v; }
+          else if (v > peakVal) { peakIdx = tau; peakVal = v; }
+        } else if (inPositive) {
+          peaks.push({ lag: peakIdx, val: peakVal });
+          inPositive = false; peakIdx = -1; peakVal = -Infinity;
+        }
+      }
+      if (inPositive && peakIdx !== -1) peaks.push({ lag: peakIdx, val: peakVal });
+      if (!peaks.length) return null;
+      let maxPeak = 0;
+      for (const p of peaks) if (p.val > maxPeak) maxPeak = p.val;
+      if (maxPeak < clarityThreshold) return null;
+      const threshold = maxPeak * peakRatio;
+      let chosen = peaks.find((p) => p.val >= threshold) || peaks[0];
+      const doubleLag = chosen.lag * 2;
+      if (doubleLag <= maxLag) {
+        const sub = peaks.find((p) => Math.abs(p.lag - doubleLag) <= Math.max(3, chosen.lag * 0.04) && p.val >= chosen.val * 0.96 && p.val >= 0.85);
+        if (sub && sub.val > chosen.val + 0.02) chosen = sub;
+      }
+      let refinedLag = chosen.lag;
+      if (chosen.lag > minLag && chosen.lag < maxLag) {
+        const y0 = nsdf[chosen.lag - 1], y1 = nsdf[chosen.lag], y2 = nsdf[chosen.lag + 1];
+        const denom = 2 * (2 * y1 - y2 - y0);
+        if (Math.abs(denom) > 1e-12) {
+          const delta = (y2 - y0) / denom;
+          if (Math.abs(delta) < 1) refinedLag = chosen.lag + delta;
+        }
+      }
+      const freq = sampleRate / refinedLag;
+      return freq >= minFreq && freq <= maxFreq ? { freq, clarity: chosen.val, rms } : null;
+    }
+
+    class PitchSmoother {
+      constructor() { this.history = []; this.lastFreq = null; this.lastValidMs = 0; }
+      reset() { this.history = []; this.lastFreq = null; this.lastValidMs = 0; }
+      push(freq, nowMs) {
+        if (!Number.isFinite(freq) || freq <= 0) {
+          if (this.lastFreq !== null && nowMs - this.lastValidMs <= 1500) return { freq: this.lastFreq, isHeld: true };
+          this.reset(); return null;
+        }
+        if (this.lastFreq !== null && Math.abs(1200 * Math.log2(freq / this.lastFreq)) > 80) this.history = [];
+        this.history.push(freq);
+        if (this.history.length > 5) this.history.shift();
+        const s = [...this.history].sort((a, b) => a - b);
+        const mid = Math.floor(s.length / 2);
+        const median = s.length % 2 === 1 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
+        this.lastFreq = median; this.lastValidMs = nowMs;
+        return { freq: median, isHeld: false };
+      }
+    }
+
+    class AudioTunerSession {
+      constructor() { this.isRunning = false; this.audioCtx = null; this.stream = null; this.analyser = null; this.wakeLock = null; }
+      async start() {
+        if (this.isRunning) return { sampleRate: this.audioCtx.sampleRate };
+        if (!window.isSecureContext) { const e = new Error("INSECURE_CONTEXT"); e.code = "INSECURE_CONTEXT"; throw e; }
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { const e = new Error("UNSUPPORTED"); e.code = "UNSUPPORTED"; throw e; }
+        let stream;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+        } catch (err) {
+          if (err && (err.name === "OverconstrainedError" || err.name === "TypeError")) {
+            stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          } else { throw err; }
+        }
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        const ctx = new Ctx();
+        if (ctx.state === "suspended") await ctx.resume();
+        const source = ctx.createMediaStreamSource(stream);
+        const filter = ctx.createBiquadFilter();
+        filter.type = "lowpass"; filter.frequency.value = 1000; filter.Q.value = 0.707;
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = FFT_SIZE; analyser.smoothingTimeConstant = 0;
+        source.connect(filter); filter.connect(analyser);
+        this.stream = stream; this.audioCtx = ctx; this.source = source; this.filter = filter; this.analyser = analyser; this.isRunning = true;
+        if ("wakeLock" in navigator) { try { this.wakeLock = await navigator.wakeLock.request("screen"); } catch {} }
+        return { sampleRate: ctx.sampleRate };
+      }
+      readTimeDomain(buf) { if (!this.isRunning || !this.analyser) return null; this.analyser.getFloatTimeDomainData(buf); return buf; }
+      async stop() {
+        this.isRunning = false;
+        if (this.wakeLock) { try { await this.wakeLock.release(); } catch {} this.wakeLock = null; }
+        if (this.source) { try { this.source.disconnect(); } catch {} }
+        if (this.filter) { try { this.filter.disconnect(); } catch {} }
+        if (this.stream) this.stream.getTracks().forEach((t) => t.stop());
+        if (this.audioCtx) { try { await this.audioCtx.close(); } catch {} }
+        this.source = this.filter = this.analyser = this.stream = this.audioCtx = null;
+      }
+    }
+
+    const state = { tuningId: DEFAULT_TUNING_ID, transpose: 0, a4: A4_DEFAULT, language: "zh-CN", sampleRate: 48000, targetAngle: 0, currentAngle: 0, lastAnalysis: null, lastIsHeld: false, installPrompt: null };
+    const session = new AudioTunerSession();
+    const smoother = new PitchSmoother();
+    const timeBuffer = new Float32Array(FFT_SIZE);
+    let rafId = 0;
+
+    function loadSettings() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "null");
+        if (!saved || typeof saved !== "object") return;
+        if (TUNINGS.some((t) => t.id === saved.tuningId)) state.tuningId = saved.tuningId;
+        if (Number.isFinite(Number(saved.transpose))) state.transpose = clamp(Math.round(Number(saved.transpose)), TRANSPOSE_MIN, TRANSPOSE_MAX);
+        if (Number.isFinite(Number(saved.a4))) state.a4 = clamp(Math.round(Number(saved.a4)), A4_MIN, A4_MAX);
+        if (SUPPORTED_LANGUAGES.includes(saved.language)) state.language = saved.language;
+      } catch {}
+    }
+
+    function saveSettings() {
+      try { localStorage.setItem(SETTINGS_KEY, JSON.stringify({ tuningId: state.tuningId, transpose: state.transpose, a4: state.a4, language: state.language })); } catch {}
+    }
+
+    function showBanner(msg) {
+      const el = $("banner"); el.hidden = !msg; el.textContent = msg || "";
+    }
+
+    function renderGaugeTicks() {
+      const container = $("gaugeTicks");
+      container.innerHTML = "";
+      for (let cents = -50; cents <= 50; cents += 5) {
+        const isMajor = cents % 10 === 0;
+        const rad = ((cents / 50) * 90 * Math.PI) / 180;
+        const rInner = isMajor ? 84 : 89;
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", (120 + rInner * Math.sin(rad)).toFixed(1));
+        line.setAttribute("y1", (126 - rInner * Math.cos(rad)).toFixed(1));
+        line.setAttribute("x2", (120 + 96 * Math.sin(rad)).toFixed(1));
+        line.setAttribute("y2", (126 - 96 * Math.cos(rad)).toFixed(1));
+        line.setAttribute("class", isMajor ? "gauge-tick major" : "gauge-tick");
+        container.appendChild(line);
+      }
+    }
+
+    function renderStrings(analysis = null) {
+      const matched = analysis ? analysis.matchedStrings : [];
+      const col = $("stringsColumn"); col.innerHTML = "";
+      getEffectiveStrings(state.tuningId, state.transpose, state.a4).forEach((s, idx) => {
+        const isMatched = matched.includes(idx);
+        const deltaCents = isMatched && analysis ? (analysis.midi - s.midi) * 100 : null;
+        const isOk = deltaCents !== null && Math.abs(deltaCents) <= IN_TUNE_CENTS;
+        const isLow = deltaCents !== null && deltaCents < -IN_TUNE_CENTS;
+        const isHigh = deltaCents !== null && deltaCents > IN_TUNE_CENTS;
+        const row = document.createElement("div");
+        row.className = "string-row" + (isMatched ? (isOk ? " in-tune" : " active") : "");
+        const peg = document.createElement("div");
+        peg.className = "string-peg";
+        peg.innerHTML = `<span class="string-note">${s.note.shortName}</span><span class="string-num">${STRING_NUMERALS[idx]}弦</span>`;
+        const hzEl = document.createElement("span");
+        hzEl.className = "string-hz";
+        hzEl.textContent = `${s.freq.toFixed(1)} Hz`;
+        const track = document.createElement("div");
+        track.className = "string-dots-track";
+        track.innerHTML =
+          `<span class="track-dot dot-low${isLow ? " lit" : ""}"></span>` +
+          `<span class="track-dot dot-ok${isOk ? " lit" : ""}"></span>` +
+          `<span class="track-dot dot-high${isHigh ? " lit" : ""}"></span>`;
+        row.appendChild(peg); row.appendChild(hzEl); row.appendChild(track);
+        col.appendChild(row);
+      });
+    }
+
+    function renderTuningCard(matched = [], inTune = false) {
+      const dict = getDict(state.language), tuning = getTuningById(state.tuningId), meta = dict.tunings[tuning.id];
+      $("tuningTitle").textContent = `${meta.name}${dict.tuningSuffix} ${tuning.keyLabel}`;
+      $("switchTuningHint").textContent = `${dict.switchTuningHint} ▾`;
+      const badge = $("transposeBadge");
+      badge.hidden = state.transpose === 0;
+      if (state.transpose !== 0) {
+        badge.textContent = state.transpose > 0 ? `+${state.transpose}` : `${state.transpose}`;
+        badge.title = dict.resetTransposeTitle;
+      }
+      const row = $("jianpuRow"); row.innerHTML = "";
+      tuning.jianpu.forEach((item, idx) => {
+        const cell = document.createElement("div");
+        cell.className = "jianpu-cell" + (matched.includes(idx) ? (inTune ? " in-tune" : " active") : "");
+        const digit = document.createElement("span"); digit.className = "jianpu-digit"; digit.textContent = item.digit;
+        const dots = document.createElement("span"); dots.className = "jianpu-dots";
+        for (let i = 0; i < Math.abs(Math.min(0, item.dots)); i++) {
+          const dot = document.createElement("span"); dot.className = "jianpu-dot"; dots.appendChild(dot);
+        }
+        cell.appendChild(digit); cell.appendChild(dots); row.appendChild(cell);
+      });
+    }
+
+    function renderDrawerList() {
+      const dict = getDict(state.language), list = $("tuningList"); list.innerHTML = "";
+      TUNINGS.forEach((t) => {
+        const info = dict.tunings[t.id];
+        const notesText = getEffectiveStrings(t.id, state.transpose, state.a4).map((s) => s.note.shortName).join("  ");
+        const btn = document.createElement("button");
+        btn.type = "button"; btn.className = "tuning-option" + (t.id === state.tuningId ? " selected" : "");
+        btn.innerHTML = `<div class="tuning-option-top"><span class="tuning-option-name">${info.name} · ${info.alter}</span><span class="tuning-option-key">${t.keyLabel}</span></div><div class="tuning-option-notes">${notesText}</div><div class="tuning-option-meta">${info.pieces}</div>`;
+        btn.addEventListener("click", () => { state.tuningId = t.id; saveSettings(); closeDrawer(); renderStaticUI(); });
+        list.appendChild(btn);
+      });
+    }
+
+    function renderReadout(analysis, isHeld) {
+      const noteDisplay = $("noteDisplay"), needle = $("needleGroup");
+      if (!analysis) {
+        $("noteLetter").textContent = "--"; $("noteAccidental").textContent = ""; $("noteOctave").textContent = "";
+        $("freqDisplay").textContent = "--.- Hz"; noteDisplay.className = "note-display";
+        needle.setAttribute("class", "needle-group"); state.targetAngle = 0;
+        renderStrings(null); renderTuningCard([], false); return;
+      }
+      $("noteLetter").textContent = analysis.note.letter;
+      $("noteAccidental").textContent = analysis.note.accidental;
+      $("noteOctave").textContent = String(analysis.note.octave);
+      $("freqDisplay").textContent = `${analysis.freq.toFixed(1)} Hz`;
+      noteDisplay.className = "note-display" + (analysis.inTune ? " in-tune" : "") + (isHeld ? " is-held" : "");
+      if (analysis.inTune) needle.setAttribute("class", "needle-group in-tune");
+      else if (analysis.cents < 0) needle.setAttribute("class", "needle-group flat");
+      else needle.setAttribute("class", "needle-group sharp");
+      state.targetAngle = clamp((analysis.cents / 50) * 90, -90, 90);
+      renderStrings(analysis);
+      renderTuningCard(analysis.matchedStrings, analysis.inTune);
+    }
+
+    function renderStaticUI() {
+      const dict = getDict(state.language);
+      document.documentElement.lang = state.language; document.title = dict.title;
+      $("appTitle").textContent = dict.title; $("langBtn").textContent = dict.langToggle;
+      $("langBtn").setAttribute("aria-label", dict.langAria); $("installBtn").textContent = dict.installApp;
+      $("micBtnText").textContent = session.isRunning ? dict.stopMic : dict.startMic;
+      $("micBtn").classList.toggle("listening", session.isRunning);
+      $("micBtn").setAttribute("aria-pressed", String(session.isRunning));
+      $("transposeDown").textContent = dict.lowerSemitone; $("transposeUp").textContent = dict.raiseSemitone;
+      $("drawerTitle").textContent = dict.drawerTitle; $("drawerClose").textContent = dict.drawerClose;
+      $("a4Value").textContent = `${state.a4} Hz`; $("a4Value").title = dict.resetA4Title;
+      $("a4Dec").disabled = state.a4 <= A4_MIN; $("a4Inc").disabled = state.a4 >= A4_MAX;
+      $("transposeDown").disabled = state.transpose <= TRANSPOSE_MIN; $("transposeUp").disabled = state.transpose >= TRANSPOSE_MAX;
+      const m = state.lastAnalysis ? state.lastAnalysis.matchedStrings : [], ok = state.lastAnalysis ? state.lastAnalysis.inTune : false;
+      renderStrings(state.lastAnalysis); renderTuningCard(m, ok); renderDrawerList();
+    }
+
+    const openDrawer = () => { renderDrawerList(); $("drawerBackdrop").hidden = false; $("tuningDrawer").hidden = false; };
+    const closeDrawer = () => { $("drawerBackdrop").hidden = true; $("tuningDrawer").hidden = true; };
+
+    function tick() {
+      if (!session.isRunning) return;
+      const buf = session.readTimeDomain(timeBuffer);
+      if (buf) {
+        const raw = detectPitchMPM(buf, state.sampleRate);
+        const sm = smoother.push(raw ? raw.freq : null, performance.now());
+        if (sm) { state.lastAnalysis = analyzePitch(sm.freq, state); state.lastIsHeld = sm.isHeld; }
+        else { state.lastAnalysis = null; state.lastIsHeld = false; }
+        renderReadout(state.lastAnalysis, state.lastIsHeld);
+      }
+      state.currentAngle += (state.targetAngle - state.currentAngle) * 0.25;
+      $("needleGroup").setAttribute("transform", `rotate(${state.currentAngle.toFixed(2)} 120 126)`);
+      rafId = requestAnimationFrame(tick);
+    }
+
+    async function startTuner() {
+      showBanner("");
+      try {
+        const { sampleRate } = await session.start();
+        state.sampleRate = sampleRate; smoother.reset(); state.lastAnalysis = null;
+        renderStaticUI(); cancelAnimationFrame(rafId); rafId = requestAnimationFrame(tick);
+      } catch (err) {
+        const d = getDict(state.language);
+        const isLocalOpaque = location.protocol === "file:" || location.protocol === "content:";
+        const msg = err?.code === "INSECURE_CONTEXT" ? (isLocalOpaque ? d.errLocalFile : d.errInsecure)
+          : err?.code === "UNSUPPORTED" ? d.errUnsupported
+          : (err?.name === "NotAllowedError" || err?.name === "PermissionDeniedError") ? (isLocalOpaque ? d.errLocalFile : d.errPermission)
+          : (err?.name === "NotFoundError" || err?.name === "DevicesNotFoundError") ? d.errNotFound : d.errUnknown;
+        showBanner(msg); renderStaticUI();
+      }
+    }
+
+    async function stopTuner(statusOverride = "") {
+      cancelAnimationFrame(rafId); await session.stop(); smoother.reset();
+      state.lastAnalysis = null; state.lastIsHeld = false; state.targetAngle = 0; state.currentAngle = 0;
+      $("needleGroup").setAttribute("transform", "rotate(0 120 126)");
+      renderStaticUI(); renderReadout(null, false);
+      if (statusOverride) showBanner(statusOverride);
+    }
+
+    $("micBtn").addEventListener("click", () => (session.isRunning ? stopTuner() : startTuner()));
+    $("langBtn").addEventListener("click", () => { state.language = state.language === "zh-CN" ? "zh-TW" : "zh-CN"; saveSettings(); renderStaticUI(); if (state.lastAnalysis) renderReadout(state.lastAnalysis, state.lastIsHeld); });
+    $("a4Dec").addEventListener("click", () => { state.a4 = clamp(state.a4 - 1, A4_MIN, A4_MAX); saveSettings(); renderStaticUI(); });
+    $("a4Inc").addEventListener("click", () => { state.a4 = clamp(state.a4 + 1, A4_MIN, A4_MAX); saveSettings(); renderStaticUI(); });
+    $("a4Value").addEventListener("click", () => { state.a4 = A4_DEFAULT; saveSettings(); renderStaticUI(); });
+    $("transposeDown").addEventListener("click", () => { state.transpose = clamp(state.transpose - 1, TRANSPOSE_MIN, TRANSPOSE_MAX); saveSettings(); renderStaticUI(); });
+    $("transposeUp").addEventListener("click", () => { state.transpose = clamp(state.transpose + 1, TRANSPOSE_MIN, TRANSPOSE_MAX); saveSettings(); renderStaticUI(); });
+    $("transposeBadge").addEventListener("click", (e) => { e.stopPropagation(); state.transpose = 0; saveSettings(); renderStaticUI(); });
+    $("tuningCard").addEventListener("click", openDrawer);
+    $("tuningCard").addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openDrawer(); } });
+    $("drawerBackdrop").addEventListener("click", closeDrawer);
+    $("drawerClose").addEventListener("click", closeDrawer);
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !$("tuningDrawer").hidden) { closeDrawer(); return; }
+      if (e.code === "Space" && $("tuningDrawer").hidden && !["BUTTON","INPUT","SELECT"].includes(document.activeElement?.tagName)) {
+        e.preventDefault(); session.isRunning ? stopTuner() : startTuner();
+      }
+    });
+    document.addEventListener("visibilitychange", () => { if (document.hidden && session.isRunning) stopTuner(getDict(state.language).pausedBackground); });
+    window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); state.installPrompt = e; $("installBtn").hidden = false; });
+    $("installBtn").addEventListener("click", async () => { if (!state.installPrompt) return; state.installPrompt.prompt(); await state.installPrompt.userChoice; state.installPrompt = null; $("installBtn").hidden = true; });
+
+    loadSettings(); renderGaugeTicks(); renderStaticUI();
+    if (!window.isSecureContext) showBanner(getDict(state.language).errInsecure);
+  })();
+  </script>
+</body>
+</html>

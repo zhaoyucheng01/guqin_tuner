@@ -45,11 +45,11 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 .topbar, .banner, .workspace { position: relative; z-index: 1; }
 .ink-wash-bg { position: fixed; left: 50%; bottom: 0; transform: translateX(-50%); width: min(460px, 100%); height: 185px; pointer-events: none; z-index: 0; }
-.ink-wash-bg svg { width: 100%; height: 100%; display: block; }
+.ink-wash-bg svg.ink-mountains { width: 100%; height: 100%; display: block; }
+.ink-wash-bg svg.ink-bamboo { position: absolute; right: 22%; bottom: 0; height: 100%; width: auto; display: block; }
 .topbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-shrink: 0; margin-bottom: 12px; }
 .brand { display: flex; flex-direction: column; min-width: 0; }
-.brand-kicker { font-size: 10px; letter-spacing: 0.14em; color: var(--gold); font-weight: 700; line-height: 1.1; }
-.brand h1 { margin: 2px 0 0; font-size: 20px; line-height: 1.15; font-weight: 750; letter-spacing: 0.04em; }
+.brand h1 { margin: 0; font-size: 20px; line-height: 1.15; font-weight: 750; letter-spacing: 0.04em; }
 .topbar-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .pill-btn {
   border: 1px solid var(--line); border-radius: 999px; padding: 7px 12px;
@@ -111,9 +111,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .needle-group.in-tune .needle-body, .needle-group.in-tune .needle-pivot { fill: var(--tune-ok); }
 .needle-group.sharp .needle-body, .needle-group.sharp .needle-pivot { fill: var(--sharp); }
 .needle-group.flat .needle-body, .needle-group.flat .needle-pivot { fill: var(--flat); }
-.workspace { margin: 0; display: grid; grid-template-columns: 1fr 88px; gap: 14px; align-items: stretch; }
-.left-pane { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-.bottom-controls { margin-top: auto; display: flex; flex-direction: column; gap: 14px; }
+.workspace { margin: 0; display: grid; grid-template-columns: 1fr 90px; gap: 15px; align-items: stretch; }
+.left-pane { display: flex; flex-direction: column; justify-content: space-between; gap: 16px; min-width: 0; }
+.bottom-controls { display: contents; }
 .a4-bar {
   background: var(--paper); border: 1px solid var(--line); border-radius: 16px;
   padding: 9px 12px; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow);
@@ -163,22 +163,22 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .jianpu-dots { display: flex; flex-direction: column; gap: 2px; margin-top: 2px; min-height: 10px; }
 .jianpu-dot { width: 3.5px; height: 3.5px; border-radius: 50%; background: currentColor; }
 .strings-pane { display: flex; flex-direction: column; justify-content: space-between; }
-.strings-column { height: 100%; display: flex; flex-direction: column; justify-content: space-between; gap: 10px; }
-.string-row { display: flex; align-items: center; justify-content: flex-end; gap: 8px; position: relative; }
+.strings-column { height: 100%; display: flex; flex-direction: column; justify-content: space-between; gap: 22px; padding: 2px 0; }
+.string-row { display: flex; align-items: center; justify-content: flex-end; gap: 11px; position: relative; }
 .string-peg {
   width: 52px; height: 52px; border-radius: 50%; background: var(--paper);
-  border: 2px solid #cfd6cf; box-shadow: inset 0 0 0 3px #f4f2ec, 0 2px 8px rgba(38, 51, 46, 0.06);
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  border: 1.5px solid #cfd6cf; box-shadow: inset 0 0 0 2px #f4f2ec, 0 2px 8px rgba(38, 51, 46, 0.06);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
   transition: transform 0.16s ease, border-color 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
 }
-.string-note { font-size: 15px; font-weight: 750; line-height: 1.05; color: var(--green); }
-.string-num { font-size: 9px; color: var(--muted); line-height: 1.1; }
+.string-note { font-size: 15.5px; font-weight: 750; line-height: 1.05; color: var(--green); }
+.string-num { font-size: 10px; color: var(--muted); line-height: 1.1; }
 .string-hz { display: none; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .string-row.active .string-peg { border-color: var(--gold); background: var(--gold-soft); transform: scale(1.07); box-shadow: inset 0 0 0 2px #fff, 0 0 0 4px rgba(162, 124, 62, 0.18); }
 .string-row.active .string-note { color: #7d5b22; }
 .string-row.in-tune .string-peg { border-color: var(--tune-ok); background: var(--tune-ok-soft); transform: scale(1.09); box-shadow: inset 0 0 0 2px #fff, 0 0 0 4px rgba(46, 125, 91, 0.22); }
 .string-row.in-tune .string-note { color: var(--tune-ok); }
-.string-dots-track { width: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+.string-dots-track { width: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
 .track-dot { width: 6.5px; height: 6.5px; border-radius: 50%; background: #d2dad5; transition: transform 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease; }
 .track-dot.dot-ok { width: 9px; height: 9px; background: #b5c3bc; }
 .track-dot.dot-low.lit { background: var(--flat); transform: scale(1.2); box-shadow: 0 0 0 3px rgba(77, 112, 138, 0.22); }
@@ -226,7 +226,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   .cents-pill { font-size: 13px; padding: 5px 13px; }
   .gauge-svg { max-width: 340px; }
   .workspace { margin: 0; grid-template-columns: 1.15fr 0.85fr; gap: 20px; align-items: stretch; }
-  .ink-wash-bg { display: block; width: 100%; height: 165px; opacity: 0.85; }
+  .ink-wash-bg { display: block; width: 100%; height: 200px; opacity: 0.9; }
   .left-pane { gap: 14px; }
   .a4-bar { padding: 12px 18px; }
   .a4-readout { font-size: 22px; }
@@ -256,7 +256,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
   <div class="app-shell">
     <header class="topbar">
       <div class="brand">
-        <span class="brand-kicker">GUQIN TUNER</span>
         <h1 id="appTitle">古琴调音器</h1>
       </div>
       <div class="topbar-actions">
@@ -345,32 +344,30 @@ button { font: inherit; color: inherit; cursor: pointer; }
     </main>
 
     <div class="ink-wash-bg" aria-hidden="true">
-      <svg viewBox="0 0 960 180" preserveAspectRatio="xMidYMax slice" fill="none">
+      <svg class="ink-mountains" viewBox="0 0 960 180" preserveAspectRatio="none" fill="none">
         <defs>
           <linearGradient id="s1" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#29483d" stop-opacity="0.06"/>
+            <stop offset="0%" stop-color="#29483d" stop-opacity="0.075"/>
             <stop offset="100%" stop-color="#29483d" stop-opacity="0"/>
           </linearGradient>
           <linearGradient id="s2" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#29483d" stop-opacity="0.085"/>
+            <stop offset="0%" stop-color="#29483d" stop-opacity="0.105"/>
             <stop offset="100%" stop-color="#29483d" stop-opacity="0.01"/>
           </linearGradient>
           <linearGradient id="s3" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#29483d" stop-opacity="0.115"/>
+            <stop offset="0%" stop-color="#29483d" stop-opacity="0.135"/>
             <stop offset="100%" stop-color="#29483d" stop-opacity="0.02"/>
           </linearGradient>
         </defs>
-        <path d="M0 78 Q 140 34, 290 62 T 560 46 T 820 68 T 960 56 L960 180 L0 180 Z" fill="url(#s1)"/>
-        <path d="M0 91 Q 180 54, 345 78 T 625 60 T 870 82 T 960 72 L960 180 L0 180 Z" fill="url(#s1)"/>
-        <path d="M0 104 Q 120 72, 275 94 T 535 76 T 780 96 T 960 88 L960 180 L0 180 Z" fill="url(#s2)"/>
-        <path d="M0 118 Q 210 86, 405 110 T 680 92 T 960 108 L960 180 L0 180 Z" fill="url(#s2)"/>
-        <path d="M0 131 Q 155 104, 335 124 T 605 108 T 855 126 T 960 120 L960 180 L0 180 Z" fill="url(#s2)"/>
-        <path d="M0 144 Q 240 120, 465 138 T 760 126 T 960 138 L960 180 L0 180 Z" fill="url(#s3)"/>
-        <path d="M0 158 Q 190 138, 395 154 T 710 146 T 960 154 L960 180 L0 180 Z" fill="url(#s3)"/>
-        <path d="M624 180 C 618 140, 621 98, 631 46" stroke="#29483d" stroke-width="1.6" stroke-linecap="round" opacity="0.14"/>
-        <path d="M625 86 C 603 78, 582 79, 566 87 C 586 90, 606 91, 625 86 Z" fill="#29483d" opacity="0.12"/>
-        <path d="M622 112 C 599 103, 577 101, 558 108 C 580 114, 602 117, 622 112 Z" fill="#29483d" opacity="0.13"/>
-        <path d="M629 66 C 646 55, 663 52, 677 56 C 662 63, 646 68, 629 66 Z" fill="#29483d" opacity="0.11"/>
+        <path d="M0 82 Q 160 36, 330 68 T 650 48 T 960 66 L960 180 L0 180 Z" fill="url(#s1)"/>
+        <path d="M0 116 Q 210 82, 420 108 T 740 88 T 960 106 L960 180 L0 180 Z" fill="url(#s2)"/>
+        <path d="M0 148 Q 220 124, 460 142 T 780 128 T 960 144 L960 180 L0 180 Z" fill="url(#s3)"/>
+      </svg>
+      <svg class="ink-bamboo" viewBox="0 0 140 180" preserveAspectRatio="xMidYMax meet" fill="none">
+        <path d="M74 180 C 68 140, 71 98, 81 46" stroke="#29483d" stroke-width="1.6" stroke-linecap="round" opacity="0.14"/>
+        <path d="M75 86 C 53 78, 32 79, 16 87 C 36 90, 56 91, 75 86 Z" fill="#29483d" opacity="0.12"/>
+        <path d="M72 112 C 49 103, 27 101, 8 108 C 30 114, 52 117, 72 112 Z" fill="#29483d" opacity="0.13"/>
+        <path d="M79 66 C 96 55, 113 52, 127 56 C 112 63, 96 68, 79 66 Z" fill="#29483d" opacity="0.11"/>
       </svg>
     </div>
   </div>
