@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <rect width="192" height="192" rx="42" fill="#29483d"/>
+  <rect x="14" y="14" width="164" height="164" rx="32" fill="none" stroke="#a27c3e" stroke-width="3" opacity="0.7"/>
+  <path d="M40 124 A 56 56 0 0 1 152 124" fill="none" stroke="#f4f2ec" stroke-width="8" stroke-linecap="round"/>
+  <path d="M84 69.5 A 56 56 0 0 1 108 69.5" fill="none" stroke="#5cc494" stroke-width="9" stroke-linecap="round"/>
+  <polygon points="96,74 90,124 102,124" fill="#a27c3e"/>
+  <circle cx="96" cy="124" r="9" fill="#f4f2ec"/>
+  <text x="96" y="156" text-anchor="middle" fill="#f4f2ec" font-size="22" font-family="serif" font-weight="700" letter-spacing="4">古琴</text>
+</svg>

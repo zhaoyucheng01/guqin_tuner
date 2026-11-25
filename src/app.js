@@ -1,0 +1,499 @@
+import {
+  TUNINGS,
+  DEFAULT_TUNING_ID,
+  A4_MIN,
+  A4_MAX,
+  A4_DEFAULT,
+  TRANSPOSE_MIN,
+  TRANSPOSE_MAX,
+  clamp,
+  getTuningById,
+  getEffectiveStrings,
+  analyzePitch
+} from "./tunings.js";
+import { detectPitchMPM, PitchSmoother } from "./pitch.js";
+import { getDict, SUPPORTED_LANGUAGES, STRING_NUMERALS } from "./i18n.js";
+import { AudioTunerSession } from "./audio.js";
+
+const SETTINGS_KEY = "guqin-tuner-settings-v1";
+const FFT_SIZE = 4096;
+
+const $ = (id) => document.getElementById(id);
+
+const state = {
+  tuningId: DEFAULT_TUNING_ID,
+  transpose: 0,
+  a4: A4_DEFAULT,
+  language: "zh-CN",
+  sampleRate: 48000,
+  targetAngle: 0,
+  currentAngle: 0,
+  lastAnalysis: null,
+  lastIsHeld: false,
+  installPrompt: null
+};
+
+const session = new AudioTunerSession({ fftSize: FFT_SIZE, lowpassHz: 1000 });
+const smoother = new PitchSmoother({ windowSize: 5, jumpCents: 80, holdMs: 1500 });
+const timeBuffer = new Float32Array(FFT_SIZE);
+let rafId = 0;
+
+function loadSettings() {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    if (!saved || typeof saved !== "object") return;
+    if (TUNINGS.some((t) => t.id === saved.tuningId)) state.tuningId = saved.tuningId;
+    if (Number.isFinite(Number(saved.transpose))) {
+      state.transpose = clamp(Math.round(Number(saved.transpose)), TRANSPOSE_MIN, TRANSPOSE_MAX);
+    }
+    if (Number.isFinite(Number(saved.a4))) {
+      state.a4 = clamp(Math.round(Number(saved.a4)), A4_MIN, A4_MAX);
+    }
+    if (SUPPORTED_LANGUAGES.includes(saved.language)) state.language = saved.language;
+  } catch {
+    // 隐私模式或存储不可用时静默降级
+  }
+}
+
+function saveSettings() {
+  try {
+    localStorage.setItem(
+      SETTINGS_KEY,
+      JSON.stringify({
+        tuningId: state.tuningId,
+        transpose: state.transpose,
+        a4: state.a4,
+        language: state.language
+      })
+    );
+  } catch {
+    // 忽略本地存储写入异常
+  }
+}
+
+function showBanner(message) {
+  const el = $("banner");
+  if (!message) {
+    el.hidden = true;
+    el.textContent = "";
+    return;
+  }
+  el.textContent = message;
+  el.hidden = false;
+}
+
+function renderGaugeTicks() {
+  const container = $("gaugeTicks");
+  container.innerHTML = "";
+  const cx = 120;
+  const cy = 126;
+  const rOuter = 96;
+
+  for (let cents = -50; cents <= 50; cents += 5) {
+    const isMajor = cents % 10 === 0;
+    const deg = (cents / 50) * 90;
+    const rad = (deg * Math.PI) / 180;
+    const rInner = isMajor ? rOuter - 12 : rOuter - 7;
+    const x1 = cx + rInner * Math.sin(rad);
+    const y1 = cy - rInner * Math.cos(rad);
+    const x2 = cx + rOuter * Math.sin(rad);
+    const y2 = cy - rOuter * Math.cos(rad);
+
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", x1.toFixed(1));
+    line.setAttribute("y1", y1.toFixed(1));
+    line.setAttribute("x2", x2.toFixed(1));
+    line.setAttribute("y2", y2.toFixed(1));
+    line.setAttribute("class", isMajor ? "gauge-tick major" : "gauge-tick");
+    container.appendChild(line);
+  }
+}
+
+function renderStrings(matchedStrings = [], inTune = false) {
+  const strings = getEffectiveStrings(state.tuningId, state.transpose, state.a4);
+  const col = $("stringsColumn");
+  col.innerHTML = "";
+
+  strings.forEach((s, idx) => {
+    const isMatched = matchedStrings.includes(idx);
+    const row = document.createElement("div");
+    row.className = "string-row" + (isMatched ? (inTune ? " in-tune" : " active") : "");
+
+    const peg = document.createElement("div");
+    peg.className = "string-peg";
+    peg.innerHTML = `<span class="string-note">${s.note.shortName}</span><span class="string-num">${STRING_NUMERALS[idx]}弦</span>`;
+
+    const track = document.createElement("div");
+    track.className = "string-dots-track";
+
+    const anchor = document.createElement("span");
+    anchor.className = "track-dot anchor";
+    track.appendChild(anchor);
+
+    const gapDots = Math.min(2, Math.max(0, s.gapToNext - 1));
+    for (let g = 0; g < gapDots; g++) {
+      const d = document.createElement("span");
+      d.className = "track-dot";
+      track.appendChild(d);
+    }
+
+    if (idx === 6) {
+      const tail = document.createElement("span");
+      tail.className = "track-dot tail";
+      track.appendChild(tail);
+    }
+
+    row.appendChild(peg);
+    row.appendChild(track);
+    col.appendChild(row);
+  });
+}
+
+function renderTuningCard(matchedStrings = [], inTune = false) {
+  const dict = getDict(state.language);
+  const tuning = getTuningById(state.tuningId);
+  const meta = dict.tunings[tuning.id];
+
+  $("tuningTitle").textContent = `${meta.name}${dict.tuningSuffix} ${tuning.keyLabel}`;
+  $("switchTuningHint").textContent = `${dict.switchTuningHint} ▾`;
+
+  const badge = $("transposeBadge");
+  if (state.transpose === 0) {
+    badge.hidden = true;
+  } else {
+    badge.hidden = false;
+    badge.textContent = state.transpose > 0 ? `+${state.transpose}` : `${state.transpose}`;
+    badge.title = dict.resetTransposeTitle;
+  }
+
+  const row = $("jianpuRow");
+  row.innerHTML = "";
+  tuning.jianpu.forEach((item, idx) => {
+    const isMatched = matchedStrings.includes(idx);
+    const cell = document.createElement("div");
+    cell.className = "jianpu-cell" + (isMatched ? (inTune ? " in-tune" : " active") : "");
+
+    const digit = document.createElement("span");
+    digit.className = "jianpu-digit";
+    digit.textContent = item.digit;
+
+    const dots = document.createElement("span");
+    dots.className = "jianpu-dots";
+    const count = Math.abs(Math.min(0, item.dots));
+    for (let i = 0; i < count; i++) {
+      const dot = document.createElement("span");
+      dot.className = "jianpu-dot";
+      dots.appendChild(dot);
+    }
+
+    cell.appendChild(digit);
+    cell.appendChild(dots);
+    row.appendChild(cell);
+  });
+}
+
+function renderDrawerList() {
+  const dict = getDict(state.language);
+  const list = $("tuningList");
+  list.innerHTML = "";
+
+  TUNINGS.forEach((t) => {
+    const info = dict.tunings[t.id];
+    const effective = getEffectiveStrings(t.id, state.transpose, state.a4);
+    const notesText = effective.map((s) => s.note.shortName).join("  ");
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "tuning-option" + (t.id === state.tuningId ? " selected" : "");
+    btn.innerHTML = `
+      <div class="tuning-option-top">
+        <span class="tuning-option-name">${info.name} · ${info.alter}</span>
+        <span class="tuning-option-key">${t.keyLabel}</span>
+      </div>
+      <div class="tuning-option-notes">${notesText}</div>
+      <div class="tuning-option-meta">${info.pieces}</div>
+    `;
+    btn.addEventListener("click", () => {
+      state.tuningId = t.id;
+      saveSettings();
+      closeDrawer();
+      renderStaticUI();
+    });
+    list.appendChild(btn);
+  });
+}
+
+function renderControls() {
+  const dict = getDict(state.language);
+  $("a4Value").textContent = `${state.a4} Hz`;
+  $("a4Value").title = dict.resetA4Title;
+  $("a4Dec").disabled = state.a4 <= A4_MIN;
+  $("a4Inc").disabled = state.a4 >= A4_MAX;
+  $("transposeDown").disabled = state.transpose <= TRANSPOSE_MIN;
+  $("transposeUp").disabled = state.transpose >= TRANSPOSE_MAX;
+}
+
+function renderReadout(analysis, isHeld) {
+  const dict = getDict(state.language);
+  const noteDisplay = $("noteDisplay");
+  const centsEl = $("centsDisplay");
+  const needle = $("needleGroup");
+
+  if (!analysis) {
+    $("noteLetter").textContent = "--";
+    $("noteAccidental").textContent = "";
+    $("noteOctave").textContent = "";
+    $("freqDisplay").textContent = "--.- Hz";
+    noteDisplay.className = "note-display";
+    centsEl.className = "cents-pill";
+    centsEl.textContent = session.isRunning ? dict.listening : dict.standby;
+    needle.setAttribute("class", "needle-group");
+    state.targetAngle = 0;
+    renderStrings([], false);
+    renderTuningCard([], false);
+    return;
+  }
+
+  $("noteLetter").textContent = analysis.note.letter;
+  $("noteAccidental").textContent = analysis.note.accidental;
+  $("noteOctave").textContent = String(analysis.note.octave);
+  $("freqDisplay").textContent = `${analysis.freq.toFixed(1)} Hz`;
+
+  const roundedCents = Math.round(analysis.cents);
+  const signedCents = roundedCents > 0 ? `+${roundedCents}` : `${roundedCents}`;
+
+  noteDisplay.className =
+    "note-display" + (analysis.inTune ? " in-tune" : "") + (isHeld ? " is-held" : "");
+
+  if (analysis.inTune) {
+    centsEl.className = "cents-pill in-tune";
+    centsEl.textContent = `${dict.inTune} ✓ (${signedCents} ${dict.centsUnit})`;
+    needle.setAttribute("class", "needle-group in-tune");
+  } else if (analysis.cents < 0) {
+    centsEl.className = "cents-pill flat";
+    centsEl.textContent = `${signedCents} ${dict.centsUnit} · ${dict.flat}`;
+    needle.setAttribute("class", "needle-group flat");
+  } else {
+    centsEl.className = "cents-pill sharp";
+    centsEl.textContent = `${signedCents} ${dict.centsUnit} · ${dict.sharp}`;
+    needle.setAttribute("class", "needle-group sharp");
+  }
+
+  state.targetAngle = clamp((analysis.cents / 50) * 90, -90, 90);
+  renderStrings(analysis.matchedStrings, analysis.inTune);
+  renderTuningCard(analysis.matchedStrings, analysis.inTune);
+}
+
+function renderStaticUI() {
+  const dict = getDict(state.language);
+  document.documentElement.lang = state.language;
+  document.title = dict.title;
+  $("appTitle").textContent = dict.title;
+  $("langBtn").textContent = dict.langToggle;
+  $("langBtn").setAttribute("aria-label", dict.langAria);
+  $("installBtn").textContent = dict.installApp;
+  $("micBtnText").textContent = session.isRunning ? dict.stopMic : dict.startMic;
+  $("micBtn").classList.toggle("listening", session.isRunning);
+  $("micBtn").setAttribute("aria-pressed", String(session.isRunning));
+  $("transposeDown").textContent = dict.lowerSemitone;
+  $("transposeUp").textContent = dict.raiseSemitone;
+  $("drawerTitle").textContent = dict.drawerTitle;
+  $("drawerClose").textContent = dict.drawerClose;
+
+  renderControls();
+  const matched = state.lastAnalysis ? state.lastAnalysis.matchedStrings : [];
+  const inTune = state.lastAnalysis ? state.lastAnalysis.inTune : false;
+  renderStrings(matched, inTune);
+  renderTuningCard(matched, inTune);
+  renderDrawerList();
+  if (!state.lastAnalysis) {
+    $("centsDisplay").textContent = session.isRunning ? dict.listening : dict.standby;
+  }
+}
+
+function openDrawer() {
+  renderDrawerList();
+  $("drawerBackdrop").hidden = false;
+  $("tuningDrawer").hidden = false;
+}
+
+function closeDrawer() {
+  $("drawerBackdrop").hidden = true;
+  $("tuningDrawer").hidden = true;
+}
+
+function mapAudioError(err) {
+  const dict = getDict(state.language);
+  if (!err) return dict.errUnknown;
+  if (err.code === "INSECURE_CONTEXT") return dict.errInsecure;
+  if (err.code === "UNSUPPORTED") return dict.errUnsupported;
+  if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") return dict.errPermission;
+  if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") return dict.errNotFound;
+  return dict.errUnknown;
+}
+
+function tick() {
+  if (!session.isRunning) return;
+
+  const buf = session.readTimeDomain(timeBuffer);
+  const now = performance.now();
+  if (buf) {
+    const raw = detectPitchMPM(buf, state.sampleRate);
+    const smoothed = smoother.push(raw ? raw.freq : null, now);
+    if (smoothed) {
+      state.lastAnalysis = analyzePitch(smoothed.freq, {
+        tuningId: state.tuningId,
+        transpose: state.transpose,
+        a4: state.a4
+      });
+      state.lastIsHeld = smoothed.isHeld;
+    } else {
+      state.lastAnalysis = null;
+      state.lastIsHeld = false;
+    }
+    renderReadout(state.lastAnalysis, state.lastIsHeld);
+  }
+
+  state.currentAngle += (state.targetAngle - state.currentAngle) * 0.25;
+  $("needleGroup").setAttribute("transform", `rotate(${state.currentAngle.toFixed(2)} 120 126)`);
+
+  rafId = requestAnimationFrame(tick);
+}
+
+async function startTuner() {
+  showBanner("");
+  try {
+    const { sampleRate } = await session.start();
+    state.sampleRate = sampleRate;
+    smoother.reset();
+    state.lastAnalysis = null;
+    renderStaticUI();
+    cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(tick);
+  } catch (err) {
+    showBanner(mapAudioError(err));
+    renderStaticUI();
+  }
+}
+
+async function stopTuner(statusOverride = "") {
+  cancelAnimationFrame(rafId);
+  await session.stop();
+  smoother.reset();
+  state.lastAnalysis = null;
+  state.lastIsHeld = false;
+  state.targetAngle = 0;
+  state.currentAngle = 0;
+  $("needleGroup").setAttribute("transform", "rotate(0 120 126)");
+  renderStaticUI();
+  renderReadout(null, false);
+  if (statusOverride) {
+    $("centsDisplay").textContent = statusOverride;
+  }
+}
+
+function bindEvents() {
+  $("micBtn").addEventListener("click", () => {
+    if (session.isRunning) {
+      stopTuner();
+    } else {
+      startTuner();
+    }
+  });
+
+  $("langBtn").addEventListener("click", () => {
+    state.language = state.language === "zh-CN" ? "zh-TW" : "zh-CN";
+    saveSettings();
+    renderStaticUI();
+    if (state.lastAnalysis) {
+      renderReadout(state.lastAnalysis, state.lastIsHeld);
+    }
+  });
+
+  $("a4Dec").addEventListener("click", () => {
+    state.a4 = clamp(state.a4 - 1, A4_MIN, A4_MAX);
+    saveSettings();
+    renderStaticUI();
+  });
+
+  $("a4Inc").addEventListener("click", () => {
+    state.a4 = clamp(state.a4 + 1, A4_MIN, A4_MAX);
+    saveSettings();
+    renderStaticUI();
+  });
+
+  $("a4Value").addEventListener("click", () => {
+    state.a4 = A4_DEFAULT;
+    saveSettings();
+    renderStaticUI();
+  });
+
+  $("transposeDown").addEventListener("click", () => {
+    state.transpose = clamp(state.transpose - 1, TRANSPOSE_MIN, TRANSPOSE_MAX);
+    saveSettings();
+    renderStaticUI();
+  });
+
+  $("transposeUp").addEventListener("click", () => {
+    state.transpose = clamp(state.transpose + 1, TRANSPOSE_MIN, TRANSPOSE_MAX);
+    saveSettings();
+    renderStaticUI();
+  });
+
+  $("transposeBadge").addEventListener("click", (e) => {
+    e.stopPropagation();
+    state.transpose = 0;
+    saveSettings();
+    renderStaticUI();
+  });
+
+  $("tuningCard").addEventListener("click", openDrawer);
+  $("tuningCard").addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      openDrawer();
+    }
+  });
+  $("drawerBackdrop").addEventListener("click", closeDrawer);
+  $("drawerClose").addEventListener("click", closeDrawer);
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden && session.isRunning) {
+      stopTuner(getDict(state.language).pausedBackground);
+    }
+  });
+
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    state.installPrompt = e;
+    $("installBtn").hidden = false;
+  });
+
+  $("installBtn").addEventListener("click", async () => {
+    if (!state.installPrompt) return;
+    state.installPrompt.prompt();
+    await state.installPrompt.userChoice;
+    state.installPrompt = null;
+    $("installBtn").hidden = true;
+  });
+}
+
+function registerServiceWorker() {
+  if ("serviceWorker" in navigator && location.protocol !== "file:") {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    });
+  }
+}
+
+loadSettings();
+renderGaugeTicks();
+bindEvents();
+renderStaticUI();
+registerServiceWorker();
+
+if (!window.isSecureContext) {
+  showBanner(getDict(state.language).errInsecure);
+}
