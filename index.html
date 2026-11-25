@@ -31,43 +31,42 @@
 
     <div id="banner" class="banner" role="alert" hidden></div>
 
-    <section class="meter-card" aria-live="polite">
-      <div class="readout">
-        <div class="note-display" id="noteDisplay">
-          <span class="note-letter" id="noteLetter">--</span>
-          <span class="note-meta">
-            <span class="note-acc" id="noteAccidental"></span>
-            <span class="note-oct" id="noteOctave"></span>
-          </span>
-        </div>
-        <div class="freq-value" id="freqDisplay">--.- Hz</div>
-        <div class="cents-pill" id="centsDisplay">待机 · 点右上角开始</div>
-      </div>
-
-      <div class="gauge-wrap">
-        <svg class="gauge-svg" viewBox="0 0 240 142" role="img" aria-label="音分偏差指针表盘">
-          <!-- 背景半圆弧 -->
-          <path class="gauge-track" d="M 24 126 A 96 96 0 0 1 216 126" />
-          <!-- 准音绿区弧 (-5 ~ +5 音分，约 ±9 度) -->
-          <path class="gauge-ok-arc" d="M 105.0 31.2 A 96 96 0 0 1 135.0 31.2" />
-          <!-- 刻度与文字 -->
-          <g id="gaugeTicks"></g>
-          <text class="gauge-label" x="24" y="139" text-anchor="middle">-50</text>
-          <text class="gauge-label" x="93" y="52" text-anchor="middle">-10</text>
-          <text class="gauge-label zero" x="120" y="45" text-anchor="middle">0</text>
-          <text class="gauge-label" x="147" y="52" text-anchor="middle">+10</text>
-          <text class="gauge-label" x="216" y="139" text-anchor="middle">+50</text>
-          <!-- 指针 -->
-          <g id="needleGroup" class="needle-group" transform="rotate(0 120 126)">
-            <polygon class="needle-body" points="120,38 115.5,122 124.5,122" />
-            <circle class="needle-pivot" cx="120" cy="126" r="7" />
-          </g>
-        </svg>
-      </div>
-    </section>
-
     <main class="workspace">
       <div class="left-pane">
+        <section class="meter-card" aria-live="polite">
+          <div class="gauge-wrap">
+            <svg class="gauge-svg" viewBox="0 0 240 142" role="img" aria-label="音分偏差指针表盘">
+              <!-- 背景半圆弧 -->
+              <path class="gauge-track" d="M 24 126 A 96 96 0 0 1 216 126" />
+              <!-- 准音绿区弧 (-5 ~ +5 音分，约 ±9 度) -->
+              <path class="gauge-ok-arc" d="M 105.0 31.2 A 96 96 0 0 1 135.0 31.2" />
+              <!-- 刻度与文字 -->
+              <g id="gaugeTicks"></g>
+              <text class="gauge-label" x="24" y="139" text-anchor="middle">-50</text>
+              <text class="gauge-label" x="97" y="62" text-anchor="middle">-10</text>
+              <text class="gauge-label zero" x="120" y="56" text-anchor="middle">0</text>
+              <text class="gauge-label" x="143" y="62" text-anchor="middle">+10</text>
+              <text class="gauge-label" x="216" y="139" text-anchor="middle">+50</text>
+              <!-- 指针 -->
+              <g id="needleGroup" class="needle-group" transform="rotate(0 120 126)">
+                <polygon class="needle-body" points="120,38 115.5,122 124.5,122" />
+                <circle class="needle-pivot" cx="120" cy="126" r="7" />
+              </g>
+            </svg>
+          </div>
+
+          <div class="readout">
+            <div class="note-display" id="noteDisplay">
+              <span class="note-letter" id="noteLetter">--</span>
+              <span class="note-meta">
+                <span class="note-acc" id="noteAccidental"></span>
+                <span class="note-oct" id="noteOctave"></span>
+              </span>
+            </div>
+            <div class="freq-value" id="freqDisplay">--.- Hz</div>
+          </div>
+        </section>
+
         <div class="a4-bar">
           <button id="a4Dec" class="round-ctrl" type="button" aria-label="降低 A4 基准">−</button>
           <button id="a4Value" class="a4-readout" type="button" title="点击重置为 440 Hz">440 Hz</button>
@@ -85,20 +84,22 @@
           </svg>
         </div>
 
-        <div class="transpose-row">
-          <button id="transposeDown" class="transpose-btn" type="button">降半音</button>
-          <button id="transposeUp" class="transpose-btn" type="button">升半音</button>
-        </div>
-
-        <div class="tuning-card" id="tuningCard" role="button" tabindex="0" aria-haspopup="dialog">
-          <div class="tuning-card-head">
-            <div class="tuning-title-wrap">
-              <span id="tuningTitle" class="tuning-title">正调定弦 1=F</span>
-              <span id="switchTuningHint" class="tuning-hint">点击切换调式 ▾</span>
-            </div>
-            <button id="transposeBadge" class="transpose-badge" type="button" hidden title="点击移调归零">-1</button>
+        <div class="bottom-controls">
+          <div class="transpose-row">
+            <button id="transposeDown" class="transpose-btn" type="button">降半音</button>
+            <button id="transposeUp" class="transpose-btn" type="button">升半音</button>
           </div>
-          <div id="jianpuRow" class="jianpu-row" aria-label="七弦散音简谱"></div>
+
+          <div class="tuning-card" id="tuningCard" role="button" tabindex="0" aria-haspopup="dialog">
+            <div class="tuning-card-head">
+              <div class="tuning-title-wrap">
+                <span id="tuningTitle" class="tuning-title">正调定弦 1=F</span>
+                <span id="switchTuningHint" class="tuning-hint">点击切换调式 ▾</span>
+              </div>
+              <button id="transposeBadge" class="transpose-badge" type="button" hidden title="点击移调归零">-1</button>
+            </div>
+            <div id="jianpuRow" class="jianpu-row" aria-label="七弦散音简谱"></div>
+          </div>
         </div>
       </div>
 
@@ -106,6 +107,39 @@
         <div id="stringsColumn" class="strings-column"></div>
       </aside>
     </main>
+
+    <!-- 底部七叠没骨水墨山水（山即七弦，纯晕染无实线） -->
+    <div class="ink-wash-bg" aria-hidden="true">
+      <svg viewBox="0 0 960 180" preserveAspectRatio="xMidYMax slice" fill="none">
+        <defs>
+          <linearGradient id="s1" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#29483d" stop-opacity="0.06"/>
+            <stop offset="100%" stop-color="#29483d" stop-opacity="0"/>
+          </linearGradient>
+          <linearGradient id="s2" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#29483d" stop-opacity="0.085"/>
+            <stop offset="100%" stop-color="#29483d" stop-opacity="0.01"/>
+          </linearGradient>
+          <linearGradient id="s3" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#29483d" stop-opacity="0.115"/>
+            <stop offset="100%" stop-color="#29483d" stop-opacity="0.02"/>
+          </linearGradient>
+        </defs>
+        <!-- 七叠纯水墨晕染（一弦至七弦，远淡近润，无实线勾边） -->
+        <path d="M0 78 Q 140 34, 290 62 T 560 46 T 820 68 T 960 56 L960 180 L0 180 Z" fill="url(#s1)"/>
+        <path d="M0 91 Q 180 54, 345 78 T 625 60 T 870 82 T 960 72 L960 180 L0 180 Z" fill="url(#s1)"/>
+        <path d="M0 104 Q 120 72, 275 94 T 535 76 T 780 96 T 960 88 L960 180 L0 180 Z" fill="url(#s2)"/>
+        <path d="M0 118 Q 210 86, 405 110 T 680 92 T 960 108 L960 180 L0 180 Z" fill="url(#s2)"/>
+        <path d="M0 131 Q 155 104, 335 124 T 605 108 T 855 126 T 960 120 L960 180 L0 180 Z" fill="url(#s2)"/>
+        <path d="M0 144 Q 240 120, 465 138 T 760 126 T 960 138 L960 180 L0 180 Z" fill="url(#s3)"/>
+        <path d="M0 158 Q 190 138, 395 154 T 710 146 T 960 154 L960 180 L0 180 Z" fill="url(#s3)"/>
+        <!-- 淡墨疏竹剪影 -->
+        <path d="M624 180 C 618 140, 621 98, 631 46" stroke="#29483d" stroke-width="1.6" stroke-linecap="round" opacity="0.14"/>
+        <path d="M625 86 C 603 78, 582 79, 566 87 C 586 90, 606 91, 625 86 Z" fill="#29483d" opacity="0.12"/>
+        <path d="M622 112 C 599 103, 577 101, 558 108 C 580 114, 602 117, 622 112 Z" fill="#29483d" opacity="0.13"/>
+        <path d="M629 66 C 646 55, 663 52, 677 56 C 662 63, 646 68, 629 66 Z" fill="#29483d" opacity="0.11"/>
+      </svg>
+    </div>
   </div>
 
   <!-- 调式选择底部抽屉 -->

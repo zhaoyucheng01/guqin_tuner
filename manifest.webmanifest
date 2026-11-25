@@ -4,7 +4,7 @@
   "description": "面向手机端的古琴实时麦克风调音器，支持六种传统古琴调式与低频防八度识别",
   "start_url": "./index.html",
   "display": "standalone",
-  "orientation": "portrait",
+  "orientation": "any",
   "theme_color": "#29483d",
   "background_color": "#f4f2ec",
   "icons": [

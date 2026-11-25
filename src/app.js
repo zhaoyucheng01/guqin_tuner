@@ -6,6 +6,7 @@ import {
   A4_DEFAULT,
   TRANSPOSE_MIN,
   TRANSPOSE_MAX,
+  IN_TUNE_CENTS,
   clamp,
   getTuningById,
   getEffectiveStrings,
@@ -111,41 +112,39 @@ function renderGaugeTicks() {
   }
 }
 
-function renderStrings(matchedStrings = [], inTune = false) {
+function renderStrings(analysis = null) {
   const strings = getEffectiveStrings(state.tuningId, state.transpose, state.a4);
+  const matchedStrings = analysis ? analysis.matchedStrings : [];
   const col = $("stringsColumn");
   col.innerHTML = "";
 
   strings.forEach((s, idx) => {
     const isMatched = matchedStrings.includes(idx);
+    const deltaCents = isMatched && analysis ? (analysis.midi - s.midi) * 100 : null;
+    const isStringOk = deltaCents !== null && Math.abs(deltaCents) <= IN_TUNE_CENTS;
+    const isStringLow = deltaCents !== null && deltaCents < -IN_TUNE_CENTS;
+    const isStringHigh = deltaCents !== null && deltaCents > IN_TUNE_CENTS;
+
     const row = document.createElement("div");
-    row.className = "string-row" + (isMatched ? (inTune ? " in-tune" : " active") : "");
+    row.className = "string-row" + (isMatched ? (isStringOk ? " in-tune" : " active") : "");
 
     const peg = document.createElement("div");
     peg.className = "string-peg";
     peg.innerHTML = `<span class="string-note">${s.note.shortName}</span><span class="string-num">${STRING_NUMERALS[idx]}弦</span>`;
 
+    const hzEl = document.createElement("span");
+    hzEl.className = "string-hz";
+    hzEl.textContent = `${s.freq.toFixed(1)} Hz`;
+
     const track = document.createElement("div");
     track.className = "string-dots-track";
-
-    const anchor = document.createElement("span");
-    anchor.className = "track-dot anchor";
-    track.appendChild(anchor);
-
-    const gapDots = Math.min(2, Math.max(0, s.gapToNext - 1));
-    for (let g = 0; g < gapDots; g++) {
-      const d = document.createElement("span");
-      d.className = "track-dot";
-      track.appendChild(d);
-    }
-
-    if (idx === 6) {
-      const tail = document.createElement("span");
-      tail.className = "track-dot tail";
-      track.appendChild(tail);
-    }
+    track.innerHTML =
+      `<span class="track-dot dot-low${isStringLow ? " lit" : ""}"></span>` +
+      `<span class="track-dot dot-ok${isStringOk ? " lit" : ""}"></span>` +
+      `<span class="track-dot dot-high${isStringHigh ? " lit" : ""}"></span>`;
 
     row.appendChild(peg);
+    row.appendChild(hzEl);
     row.appendChild(track);
     col.appendChild(row);
   });
@@ -236,9 +235,7 @@ function renderControls() {
 }
 
 function renderReadout(analysis, isHeld) {
-  const dict = getDict(state.language);
   const noteDisplay = $("noteDisplay");
-  const centsEl = $("centsDisplay");
   const needle = $("needleGroup");
 
   if (!analysis) {
@@ -247,11 +244,9 @@ function renderReadout(analysis, isHeld) {
     $("noteOctave").textContent = "";
     $("freqDisplay").textContent = "--.- Hz";
     noteDisplay.className = "note-display";
-    centsEl.className = "cents-pill";
-    centsEl.textContent = session.isRunning ? dict.listening : dict.standby;
     needle.setAttribute("class", "needle-group");
     state.targetAngle = 0;
-    renderStrings([], false);
+    renderStrings(null);
     renderTuningCard([], false);
     return;
   }
@@ -261,28 +256,19 @@ function renderReadout(analysis, isHeld) {
   $("noteOctave").textContent = String(analysis.note.octave);
   $("freqDisplay").textContent = `${analysis.freq.toFixed(1)} Hz`;
 
-  const roundedCents = Math.round(analysis.cents);
-  const signedCents = roundedCents > 0 ? `+${roundedCents}` : `${roundedCents}`;
-
   noteDisplay.className =
     "note-display" + (analysis.inTune ? " in-tune" : "") + (isHeld ? " is-held" : "");
 
   if (analysis.inTune) {
-    centsEl.className = "cents-pill in-tune";
-    centsEl.textContent = `${dict.inTune} ✓ (${signedCents} ${dict.centsUnit})`;
     needle.setAttribute("class", "needle-group in-tune");
   } else if (analysis.cents < 0) {
-    centsEl.className = "cents-pill flat";
-    centsEl.textContent = `${signedCents} ${dict.centsUnit} · ${dict.flat}`;
     needle.setAttribute("class", "needle-group flat");
   } else {
-    centsEl.className = "cents-pill sharp";
-    centsEl.textContent = `${signedCents} ${dict.centsUnit} · ${dict.sharp}`;
     needle.setAttribute("class", "needle-group sharp");
   }
 
   state.targetAngle = clamp((analysis.cents / 50) * 90, -90, 90);
-  renderStrings(analysis.matchedStrings, analysis.inTune);
+  renderStrings(analysis);
   renderTuningCard(analysis.matchedStrings, analysis.inTune);
 }
 
@@ -305,12 +291,9 @@ function renderStaticUI() {
   renderControls();
   const matched = state.lastAnalysis ? state.lastAnalysis.matchedStrings : [];
   const inTune = state.lastAnalysis ? state.lastAnalysis.inTune : false;
-  renderStrings(matched, inTune);
+  renderStrings(state.lastAnalysis);
   renderTuningCard(matched, inTune);
   renderDrawerList();
-  if (!state.lastAnalysis) {
-    $("centsDisplay").textContent = session.isRunning ? dict.listening : dict.standby;
-  }
 }
 
 function openDrawer() {
@@ -326,10 +309,13 @@ function closeDrawer() {
 
 function mapAudioError(err) {
   const dict = getDict(state.language);
+  const isLocalOpaque = location.protocol === "file:" || location.protocol === "content:";
   if (!err) return dict.errUnknown;
-  if (err.code === "INSECURE_CONTEXT") return dict.errInsecure;
+  if (err.code === "INSECURE_CONTEXT") return isLocalOpaque ? dict.errLocalFile : dict.errInsecure;
   if (err.code === "UNSUPPORTED") return dict.errUnsupported;
-  if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") return dict.errPermission;
+  if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
+    return isLocalOpaque ? dict.errLocalFile : dict.errPermission;
+  }
   if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") return dict.errNotFound;
   return dict.errUnknown;
 }
@@ -390,7 +376,7 @@ async function stopTuner(statusOverride = "") {
   renderStaticUI();
   renderReadout(null, false);
   if (statusOverride) {
-    $("centsDisplay").textContent = statusOverride;
+    showBanner(statusOverride);
   }
 }
 
@@ -458,6 +444,21 @@ function bindEvents() {
   });
   $("drawerBackdrop").addEventListener("click", closeDrawer);
   $("drawerClose").addEventListener("click", closeDrawer);
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !$("tuningDrawer").hidden) {
+      closeDrawer();
+      return;
+    }
+    if (e.code === "Space" && $("tuningDrawer").hidden) {
+      const tag = document.activeElement?.tagName;
+      if (tag !== "BUTTON" && tag !== "INPUT" && tag !== "SELECT") {
+        e.preventDefault();
+        if (session.isRunning) stopTuner();
+        else startTuner();
+      }
+    }
+  });
 
   document.addEventListener("visibilitychange", () => {
     if (document.hidden && session.isRunning) {

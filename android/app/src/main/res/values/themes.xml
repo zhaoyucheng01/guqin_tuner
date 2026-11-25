@@ -1,0 +1,8 @@
+<resources>
+    <style name="Theme.GuqinTuner" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowBackground">#F4F2EC</item>
+        <item name="colorPrimary">#29483D</item>
+        <item name="colorPrimaryDark">#29483D</item>
+        <item name="colorAccent">#A27C3E</item>
+    </style>
+</resources>
