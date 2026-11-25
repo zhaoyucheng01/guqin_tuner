@@ -81,3 +81,7 @@ guqin_tuner/
 ├── android/                    # Android 原生 WebView 壳工程（含自适应图标）
 └── .github/workflows/          # GitHub Actions 云端编译 APK 工作流
 ```
+
+## 开源许可
+
+本项目基于 [MIT License](LICENSE) 开源。
