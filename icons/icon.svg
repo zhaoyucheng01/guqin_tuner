@@ -1,17 +1,100 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#FAF8F2"/>
-      <stop offset="100%" stop-color="#EFECE2"/>
+    <linearGradient id="paperBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F5F1E6"/>
+      <stop offset="100%" stop-color="#EFEADF"/>
     </linearGradient>
+    <linearGradient id="qinBody" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#2B4B40"/>
+      <stop offset="48%" stop-color="#3E6557"/>
+      <stop offset="100%" stop-color="#2A493E"/>
+    </linearGradient>
+    <linearGradient id="goldTrim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#D4B87E"/>
+      <stop offset="100%" stop-color="#B08F52"/>
+    </linearGradient>
+    <filter id="qinShadow" x="-15%" y="-8%" width="130%" height="116%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#1E3029" flood-opacity="0.16"/>
+    </filter>
   </defs>
-  <rect width="108" height="108" rx="24" fill="url(#bg)"/>
-  <circle cx="54" cy="54" r="38" fill="none" stroke="#B89352" stroke-width="1.5" opacity="0.45"/>
-  <path d="M29 63 A25 25 0 0 1 79 63" fill="none" stroke="#3B6657" stroke-width="4.2" stroke-linecap="round"/>
-  <path d="M46.3 39.2 A25 25 0 0 1 61.7 39.2" fill="none" stroke="#3FA67B" stroke-width="4.8" stroke-linecap="round"/>
-  <polygon points="54,40 50.8,63 57.2,63" fill="#B88A44"/>
-  <circle cx="54" cy="63" r="4.5" fill="#3B6657"/>
-  <line x1="36" y1="74" x2="72" y2="74" stroke="#3B6657" stroke-width="1.4" stroke-linecap="round" opacity="0.72"/>
-  <line x1="40" y1="79" x2="68" y2="79" stroke="#B88A44" stroke-width="1.4" stroke-linecap="round" opacity="0.88"/>
-  <line x1="45" y1="84" x2="63" y2="84" stroke="#3B6657" stroke-width="1.4" stroke-linecap="round" opacity="0.52"/>
+
+  <!-- 宣纸底色 -->
+  <rect width="512" height="512" fill="url(#paperBg)"/>
+
+  <!-- 仲尼墨玉古琴 -->
+  <g filter="url(#qinShadow)">
+    <path d="M 215,72
+             Q 256,61 297,72
+             L 297,88
+             C 297,97 287,102 287,109
+             C 287,117 305,127 305,140
+             L 293,348
+             C 292,360 282,368 282,378
+             C 282,388 291,394 291,404
+             L 290,434
+             C 290,445 278,450 261,450
+             L 256,443
+             L 251,450
+             C 234,450 222,445 222,434
+             L 221,404
+             C 221,394 230,388 230,378
+             C 230,368 220,360 219,348
+             L 207,140
+             C 207,127 225,117 225,109
+             C 225,102 215,97 215,88
+             Z"
+          fill="url(#qinBody)"
+          stroke="#1E362E"
+          stroke-width="1.5"/>
+  </g>
+
+  <!-- 岳山与龙龈 -->
+  <rect x="232" y="84" width="48" height="4.5" rx="2" fill="url(#goldTrim)"/>
+  <rect x="240" y="438" width="32" height="4" rx="1.8" fill="url(#goldTrim)"/>
+
+  <!-- 七弦 -->
+  <g stroke="#CBB37D" stroke-linecap="round" opacity="0.92">
+    <line x1="236" y1="88.5" x2="243.5" y2="438" stroke-width="1.8"/>
+    <line x1="242.7" y1="88.5" x2="247.7" y2="438" stroke-width="1.7"/>
+    <line x1="249.3" y1="88.5" x2="251.8" y2="438" stroke-width="1.6"/>
+    <line x1="256" y1="88.5" x2="256" y2="438" stroke-width="1.5"/>
+    <line x1="262.7" y1="88.5" x2="260.2" y2="438" stroke-width="1.4"/>
+    <line x1="269.3" y1="88.5" x2="264.3" y2="438" stroke-width="1.3"/>
+    <line x1="276" y1="88.5" x2="268.5" y2="438" stroke-width="1.2"/>
+  </g>
+
+  <!-- 十三徽（沿一弦左侧，七徽略大） -->
+  <g fill="#E7DBBC">
+    <circle cx="219.5" cy="155" r="1.9"/>
+    <circle cx="220.2" cy="172" r="2.0"/>
+    <circle cx="221.0" cy="189" r="2.1"/>
+    <circle cx="221.8" cy="208" r="2.2"/>
+    <circle cx="222.5" cy="226" r="2.3"/>
+    <circle cx="223.2" cy="237" r="1.9"/>
+    <circle cx="224.0" cy="251" r="3.1"/>
+    <circle cx="224.7" cy="265" r="1.9"/>
+    <circle cx="225.4" cy="276" r="2.3"/>
+    <circle cx="226.1" cy="293" r="2.2"/>
+    <circle cx="226.7" cy="310" r="2.1"/>
+    <circle cx="227.3" cy="324" r="1.9"/>
+    <circle cx="227.9" cy="338" r="1.8"/>
+  </g>
+
+  <!-- 朱砂印章 -->
+  <g stroke="#A84231" fill="none" stroke-linecap="square" stroke-linejoin="miter" opacity="0.9">
+    <!-- 残破印边 -->
+    <path d="M 345,100 L 350,100 L 350,106" stroke-width="0.9"/>
+    <path d="M 350,122 L 350,136" stroke-width="0.9"/>
+    <path d="M 345,142 L 350,142" stroke-width="0.9"/>
+    <path d="M 327,130 L 327,142" stroke-width="1.0"/>
+    <!-- 上字 -->
+    <path d="M 331,100 L 336,100 M 333.5,100 L 333.5,105 M 330,105 L 336,105" stroke-width="1.3"/>
+    <path d="M 328,118 L 328,109 L 332.5,109 L 332.5,116" stroke-width="1.4"/>
+    <path d="M 341,100 L 341,103 M 336,113 L 336,103 L 347,103 L 347,118 L 337,121" stroke-width="1.4"/>
+    <path d="M 339.5,107 L 344,107 L 344,114 L 339.5,114 Z M 339.5,110.5 L 344,110.5" stroke-width="1.2"/>
+    <!-- 下字 -->
+    <path d="M 334,124 L 334,135 M 329,128 L 339,128 M 329,133 L 338,133" stroke-width="1.5"/>
+    <path d="M 334,135 L 330.5,142 M 329.5,142 L 333,142 M 334,135 L 337.5,142" stroke-width="1.5"/>
+    <path d="M 341,126 L 341,139 L 346,139 L 346,126 M 341,131 L 346,131" stroke-width="1.4"/>
+  </g>
 </svg>
