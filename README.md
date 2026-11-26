@@ -1,7 +1,7 @@
 # 古琴调音器
 
 <p align="center">
-  <img src="icons/icon.svg" width="84" alt="古琴调音器图标">
+  <img src="icons/icon-192.png" width="96" alt="古琴调音器图标">
 </p>
 
 手机上的通用调音器拿来调古琴，一弦和二弦经常抓不准。古琴一弦散音 `C2` 只有 `65.4 Hz`，手机麦克风录进来基频很弱，算法很容易把它误判成高八度的泛音，指针跟着乱跳。
