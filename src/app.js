@@ -304,16 +304,13 @@ function renderAboutModal() {
   $("aboutTitle").textContent = about.title;
   $("aboutClose").textContent = dict.drawerClose;
   $("aboutAppName").textContent = dict.title;
-  $("aboutVersionBadge").textContent = verText;
   $("aboutSubtitle").textContent = about.subtitle;
   $("aboutAuthorLabel").textContent = about.authorLabel;
   $("aboutAuthorValue").textContent = APP_AUTHOR;
   $("aboutVersionLabel").textContent = about.versionLabel;
   $("aboutVersionValue").textContent = verText;
-  $("aboutLicenseLabel").textContent = about.licenseLabel;
   $("aboutThanksLabel").textContent = about.thanksLabel;
   $("aboutThanksValue").textContent = about.thanksText;
-  $("aboutRepoLabel").textContent = about.repoLabel;
   $("aboutChangelogTitle").textContent = about.changelogTitle;
 
   const container = $("aboutChangelog");

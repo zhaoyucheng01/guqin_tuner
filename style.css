@@ -833,16 +833,6 @@ button {
   letter-spacing: 0.03em;
 }
 
-.about-version-badge {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--green);
-  background: var(--green-soft);
-  border-radius: 999px;
-  padding: 2px 9px;
-  font-variant-numeric: tabular-nums;
-}
-
 .about-subtitle {
   font-size: 13px;
   color: var(--muted);
@@ -850,7 +840,7 @@ button {
 
 .about-meta-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
   padding-top: 8px;
   border-top: 1px dashed rgba(228, 224, 213, 0.9);
@@ -886,38 +876,6 @@ button {
   font-size: 13px;
   font-weight: 600;
   color: var(--ink);
-}
-
-.about-repo-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding-top: 8px;
-  border-top: 1px dashed rgba(228, 224, 213, 0.9);
-}
-
-.about-repo-links {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.about-repo-link {
-  font-size: 12px;
-  font-weight: 650;
-  color: var(--green);
-  background: var(--green-soft);
-  border: 1px solid #cad6ce;
-  border-radius: 999px;
-  padding: 4px 10px;
-  text-decoration: none;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
-}
-
-.about-repo-link:hover {
-  background: #dce8e0;
-  border-color: var(--green);
 }
 
 .about-changelog-wrap {

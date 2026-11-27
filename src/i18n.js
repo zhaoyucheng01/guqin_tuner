@@ -45,10 +45,8 @@ const DICT = {
       subtitle: "离线古琴实时调音工具",
       versionLabel: "版本",
       authorLabel: "作者",
-      licenseLabel: "协议",
       thanksLabel: "致谢",
-      thanksText: "感谢乐乐提供的底图",
-      repoLabel: "开源仓库",
+      thanksText: "感谢子潇提供的底图",
       changelogTitle: "更新日志",
       changelog: [
         {
@@ -113,10 +111,8 @@ const DICT = {
       subtitle: "離線古琴即時調音工具",
       versionLabel: "版本",
       authorLabel: "作者",
-      licenseLabel: "授權",
       thanksLabel: "致謝",
-      thanksText: "感謝樂樂提供的底圖",
-      repoLabel: "開源倉庫",
+      thanksText: "感謝子瀟提供的底圖",
       changelogTitle: "更新日誌",
       changelog: [
         {

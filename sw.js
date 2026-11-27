@@ -1,4 +1,4 @@
-const CACHE_NAME = "guqin-tuner-v23";
+const CACHE_NAME = "guqin-tuner-v24";
 const ASSETS = [
   "./",
   "./index.html",

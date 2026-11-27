@@ -208,16 +208,13 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .about-hero { background: #faf9f4; border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
 .about-name-row { display: flex; align-items: center; gap: 8px; }
 .about-app-name { font-size: 17px; font-weight: 750; color: var(--ink); letter-spacing: 0.03em; }
-.about-version-badge { font-size: 12px; font-weight: 700; color: var(--green); background: var(--green-soft); border-radius: 999px; padding: 2px 9px; font-variant-numeric: tabular-nums; }
 .about-subtitle { font-size: 13px; color: var(--muted); }
-.about-meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding-top: 8px; border-top: 1px dashed rgba(228, 224, 213, 0.9); }
+.about-meta-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding-top: 8px; border-top: 1px dashed rgba(228, 224, 213, 0.9); }
 .about-meta-item { display: flex; flex-direction: column; gap: 2px; }
 .about-meta-label { font-size: 11px; color: var(--muted); }
 .about-meta-value { font-size: 13.5px; font-weight: 700; color: var(--ink); }
-.about-thanks-row, .about-repo-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 8px; border-top: 1px dashed rgba(228, 224, 213, 0.9); }
+.about-thanks-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 8px; border-top: 1px dashed rgba(228, 224, 213, 0.9); }
 .about-thanks-value { font-size: 13px; font-weight: 600; color: var(--ink); }
-.about-repo-links { display: flex; align-items: center; gap: 8px; }
-.about-repo-link { font-size: 12px; font-weight: 650; color: var(--green); background: var(--green-soft); border: 1px solid #cad6ce; border-radius: 999px; padding: 4px 10px; text-decoration: none; }
 .about-changelog-wrap { display: flex; flex-direction: column; gap: 8px; }
 .about-section-title { margin: 0; font-size: 13px; font-weight: 700; color: var(--green); letter-spacing: 0.03em; }
 .about-changelog { display: flex; flex-direction: column; gap: 10px; }
@@ -394,7 +391,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
       <div class="about-hero">
         <div class="about-name-row">
           <span id="aboutAppName" class="about-app-name">古琴调音器</span>
-          <span id="aboutVersionBadge" class="about-version-badge">v1.1.0</span>
         </div>
         <div id="aboutSubtitle" class="about-subtitle">离线古琴实时调音工具</div>
         <div class="about-meta-grid">
@@ -406,21 +402,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
             <span id="aboutVersionLabel" class="about-meta-label">版本</span>
             <span id="aboutVersionValue" class="about-meta-value">v1.1.0</span>
           </div>
-          <div class="about-meta-item">
-            <span id="aboutLicenseLabel" class="about-meta-label">协议</span>
-            <span class="about-meta-value">MIT</span>
-          </div>
         </div>
         <div class="about-thanks-row">
           <span id="aboutThanksLabel" class="about-meta-label">致谢</span>
-          <span id="aboutThanksValue" class="about-thanks-value">感谢乐乐提供的底图</span>
-        </div>
-        <div class="about-repo-row">
-          <span id="aboutRepoLabel" class="about-meta-label">开源仓库</span>
-          <div class="about-repo-links">
-            <a class="about-repo-link" href="https://github.com/zhaoyucheng01/guqin_tuner" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
-            <a class="about-repo-link" href="https://gitee.com/zhaoyucheng01/guqin_tuner" target="_blank" rel="noopener noreferrer">Gitee ↗</a>
-          </div>
+          <span id="aboutThanksValue" class="about-thanks-value">感谢子潇提供的底图</span>
         </div>
       </div>
       <div class="about-changelog-wrap">
@@ -483,8 +468,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
           wuyi: { name: "无射调", alter: "紧五慢一弦", pieces: "胡笳十八拍 · 大胡笳" }
         },
         about: {
-          title: "关于", subtitle: "离线古琴实时调音工具", versionLabel: "版本", authorLabel: "作者", licenseLabel: "协议",
-          thanksLabel: "致谢", thanksText: "感谢乐乐提供的底图", repoLabel: "开源仓库", changelogTitle: "更新日志",
+          title: "关于", subtitle: "离线古琴实时调音工具", versionLabel: "版本", authorLabel: "作者",
+          thanksLabel: "致谢", thanksText: "感谢子潇提供的底图", changelogTitle: "更新日志",
           changelog: [
             { version: "v1.1.0", date: "2026-11-27", items: ["底部替换为没骨水墨山水抚琴底图，适配大小屏独立构图与留白", "表盘准音绿区与准音判定由 ±5 音分调整为 ±10 音分", "A4 基准扩展至 240 ~ 640 Hz，新增按钮长按加速与低频拾音下限放宽", "新增标题连击 5 次彩蛋「关于」弹窗"] },
             { version: "v1.0.0", date: "2026-11-25", items: ["首发 MPM 低频防八度误判拾音、六种传统古琴调式与 ±6 半音移调", "支持简繁切换、PWA 离线缓存、单文件便携版与 Android 安装包"] }
@@ -513,8 +498,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
           wuyi: { name: "無射調", alter: "緊五慢一弦", pieces: "胡笳十八拍 · 大胡笳" }
         },
         about: {
-          title: "關於", subtitle: "離線古琴即時調音工具", versionLabel: "版本", authorLabel: "作者", licenseLabel: "授權",
-          thanksLabel: "致謝", thanksText: "感謝樂樂提供的底圖", repoLabel: "開源倉庫", changelogTitle: "更新日誌",
+          title: "關於", subtitle: "離線古琴即時調音工具", versionLabel: "版本", authorLabel: "作者",
+          thanksLabel: "致謝", thanksText: "感謝子瀟提供的底圖", changelogTitle: "更新日誌",
           changelog: [
             { version: "v1.1.0", date: "2026-11-27", items: ["底部替換為沒骨水墨山水撫琴底圖，適配大小螢幕獨立構圖與留白", "錶盤準音綠區與準音判定由 ±5 音分調整為 ±10 音分", "A4 基準擴展至 240 ~ 640 Hz，新增按鈕長按加速與低頻拾音下限放寬", "新增標題連擊 5 次彩蛋「關於」彈窗"] },
             { version: "v1.0.0", date: "2026-11-25", items: ["首發 MPM 低頻防八度誤判拾音、六種傳統古琴調式與 ±6 半音移調", "支援簡繁切換、PWA 離線快取、單檔可攜版與 Android 安裝包"] }
@@ -838,12 +823,12 @@ button { font: inherit; color: inherit; cursor: pointer; }
     function renderAboutModal() {
       const dict = getDict(state.language), { about } = dict, verText = `v${APP_VERSION}`;
       $("aboutTitle").textContent = about.title; $("aboutClose").textContent = dict.drawerClose;
-      $("aboutAppName").textContent = dict.title; $("aboutVersionBadge").textContent = verText;
+      $("aboutAppName").textContent = dict.title;
       $("aboutSubtitle").textContent = about.subtitle; $("aboutAuthorLabel").textContent = about.authorLabel;
       $("aboutAuthorValue").textContent = APP_AUTHOR; $("aboutVersionLabel").textContent = about.versionLabel;
-      $("aboutVersionValue").textContent = verText; $("aboutLicenseLabel").textContent = about.licenseLabel;
+      $("aboutVersionValue").textContent = verText;
       $("aboutThanksLabel").textContent = about.thanksLabel; $("aboutThanksValue").textContent = about.thanksText;
-      $("aboutRepoLabel").textContent = about.repoLabel; $("aboutChangelogTitle").textContent = about.changelogTitle;
+      $("aboutChangelogTitle").textContent = about.changelogTitle;
       const box = $("aboutChangelog"); box.innerHTML = "";
       about.changelog.forEach((entry) => {
         const card = document.createElement("div"); card.className = "changelog-entry";
