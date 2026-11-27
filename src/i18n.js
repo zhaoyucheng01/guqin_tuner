@@ -1,5 +1,7 @@
 export const SUPPORTED_LANGUAGES = ["zh-CN", "zh-TW"];
 export const STRING_NUMERALS = ["一", "二", "三", "四", "五", "六", "七"];
+export const APP_VERSION = "1.1.0";
+export const APP_AUTHOR = "朝雨";
 
 const DICT = {
   "zh-CN": {
@@ -37,6 +39,37 @@ const DICT = {
       qingshang: { name: "清商调", alter: "紧二五七弦", pieces: "捣衣 · 秋风词" },
       manshang: { name: "慢商调", alter: "慢二弦", pieces: "广陵散" },
       wuyi: { name: "无射调", alter: "紧五慢一弦", pieces: "胡笳十八拍 · 大胡笳" }
+    },
+    about: {
+      title: "关于",
+      subtitle: "离线古琴实时调音工具",
+      versionLabel: "版本",
+      authorLabel: "作者",
+      licenseLabel: "协议",
+      thanksLabel: "致谢",
+      thanksText: "感谢乐乐提供的底图",
+      repoLabel: "开源仓库",
+      changelogTitle: "更新日志",
+      changelog: [
+        {
+          version: "v1.1.0",
+          date: "2026-11-27",
+          items: [
+            "底部替换为没骨水墨山水抚琴底图，适配大小屏独立构图与留白",
+            "表盘准音绿区与准音判定由 ±5 音分调整为 ±10 音分",
+            "A4 基准扩展至 240 ~ 640 Hz，新增按钮长按加速与低频拾音下限放宽",
+            "新增标题连击 5 次彩蛋「关于」弹窗"
+          ]
+        },
+        {
+          version: "v1.0.0",
+          date: "2026-11-25",
+          items: [
+            "首发 MPM 低频防八度误判拾音、六种传统古琴调式与 ±6 半音移调",
+            "支持简繁切换、PWA 离线缓存、单文件便携版与 Android 安装包"
+          ]
+        }
+      ]
     }
   },
   "zh-TW": {
@@ -74,6 +107,37 @@ const DICT = {
       qingshang: { name: "清商調", alter: "緊二五七弦", pieces: "擣衣 · 秋風詞" },
       manshang: { name: "慢商調", alter: "慢二弦", pieces: "廣陵散" },
       wuyi: { name: "無射調", alter: "緊五慢一弦", pieces: "胡笳十八拍 · 大胡笳" }
+    },
+    about: {
+      title: "關於",
+      subtitle: "離線古琴即時調音工具",
+      versionLabel: "版本",
+      authorLabel: "作者",
+      licenseLabel: "授權",
+      thanksLabel: "致謝",
+      thanksText: "感謝樂樂提供的底圖",
+      repoLabel: "開源倉庫",
+      changelogTitle: "更新日誌",
+      changelog: [
+        {
+          version: "v1.1.0",
+          date: "2026-11-27",
+          items: [
+            "底部替換為沒骨水墨山水撫琴底圖，適配大小螢幕獨立構圖與留白",
+            "錶盤準音綠區與準音判定由 ±5 音分調整為 ±10 音分",
+            "A4 基準擴展至 240 ~ 640 Hz，新增按鈕長按加速與低頻拾音下限放寬",
+            "新增標題連擊 5 次彩蛋「關於」彈窗"
+          ]
+        },
+        {
+          version: "v1.0.0",
+          date: "2026-11-25",
+          items: [
+            "首發 MPM 低頻防八度誤判拾音、六種傳統古琴調式與 ±6 半音移調",
+            "支援簡繁切換、PWA 離線快取、單檔可攜版與 Android 安裝包"
+          ]
+        }
+      ]
     }
   }
 };

@@ -67,24 +67,21 @@ button {
   bottom: 0;
   transform: translateX(-50%);
   width: min(460px, 100%);
-  height: 185px;
+  height: auto;
   pointer-events: none;
+  user-select: none;
   z-index: 0;
 }
 
-.ink-wash-bg svg.ink-mountains {
-  width: 100%;
-  height: 100%;
+.ink-bg-picture {
   display: block;
+  width: 100%;
 }
 
-.ink-wash-bg svg.ink-bamboo {
-  position: absolute;
-  right: 22%;
-  bottom: 0;
-  height: 100%;
-  width: auto;
+.ink-bg-img {
   display: block;
+  width: 100%;
+  height: auto;
 }
 
 /* 顶部栏 */
@@ -109,6 +106,8 @@ button {
   line-height: 1.15;
   font-weight: 750;
   letter-spacing: 0.04em;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .topbar-actions {
@@ -802,7 +801,194 @@ button {
   letter-spacing: 0.04em;
 }
 
+/* 关于彩蛋弹窗 */
+.about-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.about-hero {
+  background: #faf9f4;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.about-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.about-app-name {
+  font-size: 17px;
+  font-weight: 750;
+  color: var(--ink);
+  letter-spacing: 0.03em;
+}
+
+.about-version-badge {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--green);
+  background: var(--green-soft);
+  border-radius: 999px;
+  padding: 2px 9px;
+  font-variant-numeric: tabular-nums;
+}
+
+.about-subtitle {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.about-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(228, 224, 213, 0.9);
+}
+
+.about-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.about-meta-label {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.about-meta-value {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.about-thanks-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(228, 224, 213, 0.9);
+}
+
+.about-thanks-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.about-repo-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(228, 224, 213, 0.9);
+}
+
+.about-repo-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.about-repo-link {
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--green);
+  background: var(--green-soft);
+  border: 1px solid #cad6ce;
+  border-radius: 999px;
+  padding: 4px 10px;
+  text-decoration: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.about-repo-link:hover {
+  background: #dce8e0;
+  border-color: var(--green);
+}
+
+.about-changelog-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.about-section-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--green);
+  letter-spacing: 0.03em;
+}
+
+.about-changelog {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.changelog-entry {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  padding: 11px 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.changelog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.changelog-ver {
+  font-size: 14px;
+  font-weight: 750;
+  color: var(--green);
+  font-variant-numeric: tabular-nums;
+}
+
+.changelog-date {
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.changelog-list {
+  margin: 0;
+  padding-left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
 /* 矮屏手机紧凑微调 */
+@media (max-height: 720px) and (max-width: 819px) {
+  .ink-wash-bg {
+    bottom: -18px;
+    opacity: 0.55;
+  }
+}
+
 @media (max-height: 700px) and (max-width: 819px) {
   .app-shell {
     gap: 8px;
@@ -902,9 +1088,10 @@ button {
 
   .ink-wash-bg {
     display: block;
-    width: 100%;
-    height: 200px;
-    opacity: 0.9;
+    width: min(1440px, 98vw);
+    height: auto;
+    bottom: -42px;
+    opacity: 0.96;
   }
 
   .left-pane {
@@ -1025,5 +1212,15 @@ button {
 
   .tuning-option:hover {
     border-color: var(--gold);
+  }
+}
+
+/* 中等宽屏 / 矮屏笔记本底图退居轻淡衬底 */
+@media (min-width: 820px) and (max-width: 1199px),
+  (min-width: 820px) and (max-height: 780px) {
+  .ink-wash-bg {
+    width: min(1180px, 100vw);
+    bottom: -64px;
+    opacity: 0.72;
   }
 }

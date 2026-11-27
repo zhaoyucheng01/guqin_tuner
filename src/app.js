@@ -13,7 +13,7 @@ import {
   analyzePitch
 } from "./tunings.js";
 import { detectPitchMPM, PitchSmoother } from "./pitch.js";
-import { getDict, SUPPORTED_LANGUAGES, STRING_NUMERALS } from "./i18n.js";
+import { getDict, SUPPORTED_LANGUAGES, STRING_NUMERALS, APP_VERSION, APP_AUTHOR } from "./i18n.js";
 import { AudioTunerSession } from "./audio.js";
 
 const SETTINGS_KEY = "guqin-tuner-settings-v1";
@@ -294,6 +294,54 @@ function renderStaticUI() {
   renderStrings(state.lastAnalysis);
   renderTuningCard(matched, inTune);
   renderDrawerList();
+  renderAboutModal();
+}
+
+function renderAboutModal() {
+  const dict = getDict(state.language);
+  const { about } = dict;
+  const verText = `v${APP_VERSION}`;
+  $("aboutTitle").textContent = about.title;
+  $("aboutClose").textContent = dict.drawerClose;
+  $("aboutAppName").textContent = dict.title;
+  $("aboutVersionBadge").textContent = verText;
+  $("aboutSubtitle").textContent = about.subtitle;
+  $("aboutAuthorLabel").textContent = about.authorLabel;
+  $("aboutAuthorValue").textContent = APP_AUTHOR;
+  $("aboutVersionLabel").textContent = about.versionLabel;
+  $("aboutVersionValue").textContent = verText;
+  $("aboutLicenseLabel").textContent = about.licenseLabel;
+  $("aboutThanksLabel").textContent = about.thanksLabel;
+  $("aboutThanksValue").textContent = about.thanksText;
+  $("aboutRepoLabel").textContent = about.repoLabel;
+  $("aboutChangelogTitle").textContent = about.changelogTitle;
+
+  const container = $("aboutChangelog");
+  container.innerHTML = "";
+  about.changelog.forEach((entry) => {
+    const card = document.createElement("div");
+    card.className = "changelog-entry";
+    const itemsHtml = entry.items.map((item) => `<li>${item}</li>`).join("");
+    card.innerHTML = `
+      <div class="changelog-head">
+        <span class="changelog-ver">${entry.version}</span>
+        <span class="changelog-date">${entry.date}</span>
+      </div>
+      <ul class="changelog-list">${itemsHtml}</ul>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function openAboutModal() {
+  renderAboutModal();
+  $("aboutBackdrop").hidden = false;
+  $("aboutModal").hidden = false;
+}
+
+function closeAboutModal() {
+  $("aboutBackdrop").hidden = true;
+  $("aboutModal").hidden = true;
 }
 
 function openDrawer() {
@@ -380,6 +428,69 @@ async function stopTuner(statusOverride = "") {
   }
 }
 
+function bindHoldRepeat(button, onStep) {
+  let delayTimer = 0;
+  let repeatTimer = 0;
+  let stepCount = 0;
+  let handledByPointer = false;
+
+  const stop = () => {
+    clearTimeout(delayTimer);
+    clearTimeout(repeatTimer);
+    delayTimer = 0;
+    repeatTimer = 0;
+    stepCount = 0;
+  };
+
+  const scheduleNext = () => {
+    const delta = stepCount >= 18 ? 10 : stepCount >= 8 ? 5 : 1;
+    const interval = stepCount >= 18 ? 70 : stepCount >= 8 ? 75 : 90;
+    repeatTimer = setTimeout(() => {
+      if (button.disabled) {
+        stop();
+        return;
+      }
+      stepCount += 1;
+      onStep(delta);
+      scheduleNext();
+    }, interval);
+  };
+
+  button.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0 || button.disabled) return;
+    handledByPointer = true;
+    stop();
+    onStep(1);
+    delayTimer = setTimeout(() => {
+      if (!button.disabled) {
+        scheduleNext();
+      }
+    }, 380);
+  });
+
+  ["pointerup", "pointercancel", "pointerleave"].forEach((evt) => {
+    button.addEventListener(evt, stop);
+  });
+
+  button.addEventListener("click", () => {
+    if (handledByPointer) {
+      handledByPointer = false;
+      return;
+    }
+    if (!button.disabled) {
+      onStep(1);
+    }
+  });
+}
+
+function adjustA4(delta) {
+  const next = clamp(state.a4 + delta, A4_MIN, A4_MAX);
+  if (next === state.a4) return;
+  state.a4 = next;
+  saveSettings();
+  renderStaticUI();
+}
+
 function bindEvents() {
   $("micBtn").addEventListener("click", () => {
     if (session.isRunning) {
@@ -398,17 +509,8 @@ function bindEvents() {
     }
   });
 
-  $("a4Dec").addEventListener("click", () => {
-    state.a4 = clamp(state.a4 - 1, A4_MIN, A4_MAX);
-    saveSettings();
-    renderStaticUI();
-  });
-
-  $("a4Inc").addEventListener("click", () => {
-    state.a4 = clamp(state.a4 + 1, A4_MIN, A4_MAX);
-    saveSettings();
-    renderStaticUI();
-  });
+  bindHoldRepeat($("a4Dec"), (step) => adjustA4(-step));
+  bindHoldRepeat($("a4Inc"), (step) => adjustA4(step));
 
   $("a4Value").addEventListener("click", () => {
     state.a4 = A4_DEFAULT;
@@ -445,12 +547,36 @@ function bindEvents() {
   $("drawerBackdrop").addEventListener("click", closeDrawer);
   $("drawerClose").addEventListener("click", closeDrawer);
 
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && !$("tuningDrawer").hidden) {
-      closeDrawer();
-      return;
+  // 连击标题 5 次弹出关于弹窗
+  let titleTapCount = 0;
+  let titleLastTapMs = 0;
+  $("appTitle").addEventListener("click", () => {
+    const now = Date.now();
+    if (now - titleLastTapMs > 600) {
+      titleTapCount = 0;
     }
-    if (e.code === "Space" && $("tuningDrawer").hidden) {
+    titleLastTapMs = now;
+    titleTapCount += 1;
+    if (titleTapCount >= 5) {
+      titleTapCount = 0;
+      openAboutModal();
+    }
+  });
+  $("aboutBackdrop").addEventListener("click", closeAboutModal);
+  $("aboutClose").addEventListener("click", closeAboutModal);
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      if (!$("aboutModal").hidden) {
+        closeAboutModal();
+        return;
+      }
+      if (!$("tuningDrawer").hidden) {
+        closeDrawer();
+        return;
+      }
+    }
+    if (e.code === "Space" && $("tuningDrawer").hidden && $("aboutModal").hidden) {
       const tag = document.activeElement?.tagName;
       if (tag !== "BUTTON" && tag !== "INPUT" && tag !== "SELECT") {
         e.preventDefault();

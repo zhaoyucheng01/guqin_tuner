@@ -2,6 +2,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   TUNINGS,
+  A4_MIN,
+  A4_MAX,
+  IN_TUNE_CENTS,
   midiToFreq,
   freqToMidi,
   formatMidiNote,
@@ -69,4 +72,35 @@ test("analyzePitch matches single string, unison strings in manshang, and ignore
   const resFar = analyzePitch(eb4, { tuningId: "zhengdiao", transpose: -1, a4: 440 });
   assert.equal(resFar.note.fullName, "E♭4");
   assert.deepEqual(resFar.matchedStrings, []);
+});
+
+test("A4 range spans 440 ± 200 Hz (240..640 Hz) and clamps cleanly", () => {
+  assert.equal(A4_MIN, 240);
+  assert.equal(A4_MAX, 640);
+
+  const lowStrings = getEffectiveStrings("zhengdiao", 0, 240);
+  assert.ok(Math.abs(lowStrings[0].freq - midiToFreq(36, 240)) < 1e-4);
+
+  const highStrings = getEffectiveStrings("zhengdiao", 0, 640);
+  assert.ok(Math.abs(highStrings[0].freq - midiToFreq(36, 640)) < 1e-4);
+
+  const clampedLow = getEffectiveStrings("zhengdiao", 0, 100);
+  assert.ok(Math.abs(clampedLow[0].freq - midiToFreq(36, 240)) < 1e-4);
+
+  const clampedHigh = getEffectiveStrings("zhengdiao", 0, 900);
+  assert.ok(Math.abs(clampedHigh[0].freq - midiToFreq(36, 640)) < 1e-4);
+});
+
+test("in-tune tolerance is ±10 cents", () => {
+  assert.equal(IN_TUNE_CENTS, 10);
+  const base = midiToFreq(36, 440);
+  const plus9 = base * Math.pow(2, 9.5 / 1200);
+  const minus9 = base * Math.pow(2, -9.5 / 1200);
+  const plus11 = base * Math.pow(2, 10.5 / 1200);
+  const minus11 = base * Math.pow(2, -10.5 / 1200);
+
+  assert.equal(analyzePitch(plus9, { tuningId: "zhengdiao", a4: 440 }).inTune, true);
+  assert.equal(analyzePitch(minus9, { tuningId: "zhengdiao", a4: 440 }).inTune, true);
+  assert.equal(analyzePitch(plus11, { tuningId: "zhengdiao", a4: 440 }).inTune, false);
+  assert.equal(analyzePitch(minus11, { tuningId: "zhengdiao", a4: 440 }).inTune, false);
 });

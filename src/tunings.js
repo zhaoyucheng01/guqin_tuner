@@ -1,10 +1,10 @@
 export const DEFAULT_TUNING_ID = "zhengdiao";
-export const A4_MIN = 430;
-export const A4_MAX = 450;
+export const A4_MIN = 240;
+export const A4_MAX = 640;
 export const A4_DEFAULT = 440;
 export const TRANSPOSE_MIN = -6;
 export const TRANSPOSE_MAX = 6;
-export const IN_TUNE_CENTS = 5;
+export const IN_TUNE_CENTS = 10;
 export const STRING_MATCH_SEMITONES = 1.5;
 
 export const TUNINGS = [

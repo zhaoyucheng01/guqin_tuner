@@ -21,7 +21,7 @@ function centsDiff(measured, target) {
 
 test("detectPitchMPM detects guqin low and mid frequencies within 2 cents", () => {
   const sr = 48000;
-  const targets = [58.27, 65.41, 146.83, 440.0];
+  const targets = [35.68, 58.27, 65.41, 146.83, 440.0];
   for (const target of targets) {
     const buf = synthWave(sr, 4096, [[target, 0.5]]);
     const result = detectPitchMPM(buf, sr);

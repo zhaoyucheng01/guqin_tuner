@@ -37,8 +37,8 @@
             <svg class="gauge-svg" viewBox="0 0 240 142" role="img" aria-label="音分偏差指针表盘">
               <!-- 背景半圆弧 -->
               <path class="gauge-track" d="M 24 126 A 96 96 0 0 1 216 126" />
-              <!-- 准音绿区弧 (-5 ~ +5 音分，约 ±9 度) -->
-              <path class="gauge-ok-arc" d="M 105.0 31.2 A 96 96 0 0 1 135.0 31.2" />
+              <!-- 准音绿区弧 (-10 ~ +10 音分，约 ±18 度) -->
+              <path class="gauge-ok-arc" d="M 90.3 34.7 A 96 96 0 0 1 149.7 34.7" />
               <!-- 刻度与文字 -->
               <g id="gaugeTicks"></g>
               <text class="gauge-label" x="24" y="139" text-anchor="middle">-50</text>
@@ -107,35 +107,12 @@
       </aside>
     </main>
 
-    <!-- 底部三叠没骨水墨远山（远、中、近三层晕染，简洁留白） -->
+    <!-- 底部没骨水墨山水抚琴底图（小屏竖向意象 / 大屏烟波宽卷） -->
     <div class="ink-wash-bg" aria-hidden="true">
-      <svg class="ink-mountains" viewBox="0 0 960 180" preserveAspectRatio="none" fill="none">
-        <defs>
-          <linearGradient id="s1" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#29483d" stop-opacity="0.075"/>
-            <stop offset="100%" stop-color="#29483d" stop-opacity="0"/>
-          </linearGradient>
-          <linearGradient id="s2" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#29483d" stop-opacity="0.105"/>
-            <stop offset="100%" stop-color="#29483d" stop-opacity="0.01"/>
-          </linearGradient>
-          <linearGradient id="s3" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#29483d" stop-opacity="0.135"/>
-            <stop offset="100%" stop-color="#29483d" stop-opacity="0.02"/>
-          </linearGradient>
-        </defs>
-        <!-- 三叠水墨远山（远淡近润，无实线勾边） -->
-        <path d="M0 82 Q 160 36, 330 68 T 650 48 T 960 66 L960 180 L0 180 Z" fill="url(#s1)"/>
-        <path d="M0 116 Q 210 82, 420 108 T 740 88 T 960 106 L960 180 L0 180 Z" fill="url(#s2)"/>
-        <path d="M0 148 Q 220 124, 460 142 T 780 128 T 960 144 L960 180 L0 180 Z" fill="url(#s3)"/>
-      </svg>
-      <!-- 淡墨疏竹剪影（独立比例，宽屏不拉伸、不裁顶） -->
-      <svg class="ink-bamboo" viewBox="0 0 140 180" preserveAspectRatio="xMidYMax meet" fill="none">
-        <path d="M74 180 C 68 140, 71 98, 81 46" stroke="#29483d" stroke-width="1.6" stroke-linecap="round" opacity="0.14"/>
-        <path d="M75 86 C 53 78, 32 79, 16 87 C 36 90, 56 91, 75 86 Z" fill="#29483d" opacity="0.12"/>
-        <path d="M72 112 C 49 103, 27 101, 8 108 C 30 114, 52 117, 72 112 Z" fill="#29483d" opacity="0.13"/>
-        <path d="M79 66 C 96 55, 113 52, 127 56 C 112 63, 96 68, 79 66 Z" fill="#29483d" opacity="0.11"/>
-      </svg>
+      <picture class="ink-bg-picture">
+        <source media="(min-width: 820px)" srcset="assets/ink-bg-desktop.webp" type="image/webp">
+        <img class="ink-bg-img" src="assets/ink-bg-mobile.webp" alt="" decoding="async">
+      </picture>
     </div>
   </div>
 
@@ -147,6 +124,53 @@
       <button id="drawerClose" class="drawer-close" type="button">关闭</button>
     </div>
     <div id="tuningList" class="tuning-list"></div>
+  </section>
+
+  <!-- 隐藏彩蛋：关于弹窗（连击标题 5 次触发） -->
+  <div id="aboutBackdrop" class="drawer-backdrop" hidden></div>
+  <section id="aboutModal" class="drawer about-modal" role="dialog" aria-modal="true" aria-labelledby="aboutTitle" hidden>
+    <div class="drawer-header">
+      <h2 id="aboutTitle">关于</h2>
+      <button id="aboutClose" class="drawer-close" type="button">关闭</button>
+    </div>
+    <div class="about-body">
+      <div class="about-hero">
+        <div class="about-name-row">
+          <span id="aboutAppName" class="about-app-name">古琴调音器</span>
+          <span id="aboutVersionBadge" class="about-version-badge">v1.1.0</span>
+        </div>
+        <div id="aboutSubtitle" class="about-subtitle">离线古琴实时调音工具</div>
+        <div class="about-meta-grid">
+          <div class="about-meta-item">
+            <span id="aboutAuthorLabel" class="about-meta-label">作者</span>
+            <span id="aboutAuthorValue" class="about-meta-value">朝雨</span>
+          </div>
+          <div class="about-meta-item">
+            <span id="aboutVersionLabel" class="about-meta-label">版本</span>
+            <span id="aboutVersionValue" class="about-meta-value">v1.1.0</span>
+          </div>
+          <div class="about-meta-item">
+            <span id="aboutLicenseLabel" class="about-meta-label">协议</span>
+            <span class="about-meta-value">MIT</span>
+          </div>
+        </div>
+        <div class="about-thanks-row">
+          <span id="aboutThanksLabel" class="about-meta-label">致谢</span>
+          <span id="aboutThanksValue" class="about-thanks-value">感谢乐乐提供的底图</span>
+        </div>
+        <div class="about-repo-row">
+          <span id="aboutRepoLabel" class="about-meta-label">开源仓库</span>
+          <div class="about-repo-links">
+            <a class="about-repo-link" href="https://github.com/zhaoyucheng01/guqin_tuner" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+            <a class="about-repo-link" href="https://gitee.com/zhaoyucheng01/guqin_tuner" target="_blank" rel="noopener noreferrer">Gitee ↗</a>
+          </div>
+        </div>
+      </div>
+      <div class="about-changelog-wrap">
+        <h3 id="aboutChangelogTitle" class="about-section-title">更新日志</h3>
+        <div id="aboutChangelog" class="about-changelog"></div>
+      </div>
+    </div>
   </section>
 
   <script type="module" src="src/app.js"></script>

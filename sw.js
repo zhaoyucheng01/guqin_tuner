@@ -1,10 +1,12 @@
-const CACHE_NAME = "guqin-tuner-v21";
+const CACHE_NAME = "guqin-tuner-v23";
 const ASSETS = [
   "./",
   "./index.html",
   "./style.css",
   "./manifest.webmanifest",
   "./icons/icon.svg",
+  "./assets/ink-bg-mobile.webp",
+  "./assets/ink-bg-desktop.webp",
   "./src/tunings.js",
   "./src/pitch.js",
   "./src/i18n.js",

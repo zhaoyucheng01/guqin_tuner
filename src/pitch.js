@@ -1,6 +1,6 @@
 export function detectPitchMPM(buffer, sampleRate, options = {}) {
   const {
-    minFreq = 45,
+    minFreq = 30,
     maxFreq = 1200,
     rmsThreshold = 0.008,
     clarityThreshold = 0.55,
